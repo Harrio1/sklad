@@ -42,29 +42,14 @@ const logout = () => {
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
                                 <Link :href="route('dashboard')">
-                                    Sklad
+                                    <ApplicationMark class="block h-9 w-auto" />
                                 </Link>
                             </div>
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    Домой
-                                </NavLink>
-                                <NavLink :href="route('suppliers')" :active="route().current('suppliers')">
-                                    Поставщики
-                                </NavLink>
-                                <NavLink :href="route('nomenclature')" :active="route().current('nomenclature')">
-                                    Номенклатура
-                                </NavLink>                                
-                                <NavLink :href="route('supplies')" :active="route().current('supplies')">
-                                    Поставки
-                                </NavLink>
-                                <NavLink :href="route('products')" :active="route().current('products')">
-                                    Продукты
-                                </NavLink>
-                                <NavLink :href="route('products_nomenclatures')" :active="route().current('products_nomenclatures')">
-                                    Номенклатура продукта
+                                    Dashboard
                                 </NavLink>
                             </div>
                         </div>
@@ -150,11 +135,11 @@ const logout = () => {
                                     <template #content>
                                         <!-- Account Management -->
                                         <div class="block px-4 py-2 text-xs text-gray-400">
-                                            Настройки
+                                            Manage Account
                                         </div>
 
                                         <DropdownLink :href="route('profile.show')">
-                                            Профиль
+                                            Profile
                                         </DropdownLink>
 
                                         <DropdownLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')">
@@ -166,7 +151,7 @@ const logout = () => {
                                         <!-- Authentication -->
                                         <form @submit.prevent="logout">
                                             <DropdownLink as="button">
-                                                Выход
+                                                Log Out
                                             </DropdownLink>
                                         </form>
                                     </template>
@@ -209,18 +194,6 @@ const logout = () => {
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                             Dashboard
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('suppliers')" :active="route().current('suppliers')">
-                                    Поставщики
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink :href="route('supplies')" :active="route().current('supplies')">
-                                    Поставки
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink :href="route('nomenclature')" :active="route().current('nomenclature')">
-                                    Номенклатура
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink :href="route('products')" :active="route().current('products')">
-                                    Продукты
-                                </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
