@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use App\Http\Controllers\SuppliersController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -32,4 +33,22 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+
+    Route::get('/suppliers', function () {
+        return Inertia::render('Suppliers');
+    })->name('suppliers');
+
+    Route::post('/add-suppliers', [SuppliersController::class, 'store'])->name('add-suppliers');
+
+    Route::get('/supplies', function () {
+        return Inertia::render('Supplies');
+    })->name('supplies');
+
+    Route::get('/nomenclature', function () {
+        return Inertia::render('Nomenclature');
+    })->name('nomenclature');
+
+
+
+
 });

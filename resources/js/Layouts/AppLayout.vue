@@ -42,14 +42,23 @@ const logout = () => {
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
                                 <Link :href="route('dashboard')">
-                                    <ApplicationMark class="block h-9 w-auto" />
+                                    Sklad
                                 </Link>
                             </div>
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    Dashboard
+                                    Домой
+                                </NavLink>
+                                <NavLink :href="route('suppliers')" :active="route().current('suppliers')">
+                                    Поставщики
+                                </NavLink>
+                                <NavLink :href="route('supplies')" :active="route().current('supplies')">
+                                    Поставки
+                                </NavLink>
+                                <NavLink :href="route('nomenclature')" :active="route().current('nomenclature')">
+                                    Номенклатура
                                 </NavLink>
                             </div>
                         </div>
@@ -135,11 +144,11 @@ const logout = () => {
                                     <template #content>
                                         <!-- Account Management -->
                                         <div class="block px-4 py-2 text-xs text-gray-400">
-                                            Manage Account
+                                            Настройки
                                         </div>
 
                                         <DropdownLink :href="route('profile.show')">
-                                            Profile
+                                            Профиль
                                         </DropdownLink>
 
                                         <DropdownLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')">
@@ -151,7 +160,7 @@ const logout = () => {
                                         <!-- Authentication -->
                                         <form @submit.prevent="logout">
                                             <DropdownLink as="button">
-                                                Log Out
+                                                Выход
                                             </DropdownLink>
                                         </form>
                                     </template>
