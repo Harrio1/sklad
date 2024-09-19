@@ -1,28 +1,58 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 
-
+import { ref } from 'vue'
 import { reactive } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+//import { useForm } from '@inertiajs/vue3'
+import axios from 'axios'
+
 
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
 
-const form = useForm({
-    csrf: csrf,
+const form = reactive({
     supplierName: null,
     address: null,
     supplierComments: null,
     phoneNumber: null
 })
 
+let isOpenModal = ref(false);
+let messageResponse = ref('');
+
+
+function closemessageResponse(){
+    isOpenModal.value = false;
+}
+
+const suppliers = reactive({
+
+})
+
+
+axios({
+        method: 'get',
+        url: '/get-suppliers',
+    }).then((response) => {
+        suppliers.value = response.data.suppliers
+})
 
 
 
 const submitForm = () => {
-
-    form.post('/add-suppliers', {
-        preserveScroll: true,
-        onSuccess: () => console.log('данные отправлены успешно'),
+    axios({
+        method: 'post',
+        url: '/add-suppliers',
+        data: {
+            csrf: csrf,
+            supplierName: form.supplierName,
+            address: form.address,
+            supplierComments: form.supplierComments,
+            phoneNumber: form.phoneNumber
+    }
+    }).then((response) => {
+        isOpenModal.value = true;
+        messageResponse.value = response.data.success;
+        setTimeout(closemessageResponse, 2000);
     })
 };
 
@@ -30,6 +60,9 @@ const submitForm = () => {
 
 <template>
     <AppLayout title="Suppliers">
+
+
+        <div class="modalMessage" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Поставщики
@@ -74,8 +107,8 @@ const submitForm = () => {
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить поставщика
                         </button>
-
-                    
+                       
+                        
                     </form>
                     
 
@@ -85,3 +118,22 @@ const submitForm = () => {
         </div>
     </AppLayout>
 </template>
+
+
+
+<style>
+
+.modalMessage{
+    position: absolute;
+    top: 10%;
+    border: 1px solid #ccc;
+    box-shadow: 0px 0px 20px #444;
+    background-color: rgb(0, 95, 13);
+    padding: 20px 40px;
+    color: #ccc;
+}
+
+
+
+
+</style>

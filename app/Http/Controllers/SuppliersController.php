@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Suppliers;
-
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Response;
 
 class SuppliersController extends Controller
 {
@@ -16,22 +17,31 @@ class SuppliersController extends Controller
             'supplierName' => ['required', 'max:50'],
             'address' => ['required', 'max:100'],
             'supplierComments' => ['required', 'max:500'],
-            'phoneNumber' => ['required', 'max:11','min:8','integer'],
+            'phoneNumber' => ['required', 'integer'],
         ]);
 
         $suppliers = new Suppliers;
 
-        $suppliers->supplierName = $request->supplierName;
+        $suppliers->name = $request->supplierName;
         $suppliers->address = $request->address;
-        $suppliers->supplierComments = $request->supplierComments;
-        $suppliers->phoneNumber = $request->phoneNumber;
-
-
+        $suppliers->comments = $request->supplierComments;
+        $suppliers->phone = $request->phoneNumber;
 
         //dd($suppliers);
 
         $suppliers->save();
 
-        return Redirect::route('suppliers');
+        return Response::json(['success' => 'Данные добавлены'], 200);
+       // return Redirect::route('suppliers',['message' => 'Данные добавлены']);
     }
+
+    public function getSuppliers(){
+
+        $suppliers = Suppliers::all();
+        return Response::json(['suppliers' => $suppliers], 200);
+
+    }
+
+
+
 }

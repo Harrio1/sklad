@@ -39,6 +39,8 @@ Route::middleware([
     })->name('suppliers');
 
     Route::post('/add-suppliers', [SuppliersController::class, 'store'])->name('add-suppliers');
+    Route::get('/get-suppliers', [SuppliersController::class, 'getSuppliers'])->name('get-suppliers');
+
 
     Route::get('/supplies', function () {
         return Inertia::render('Supplies');
