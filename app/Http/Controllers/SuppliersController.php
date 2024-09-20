@@ -53,18 +53,22 @@ class SuppliersController extends Controller
 
 
 
-    public function updateById(Request $request){
-
-        $flight = Suppliers::findOr($request->suppliers_id, function () {
-              return Response::json(['status' => 'Ошибка, элемент не найден'], 200);
-        });
-           $flight->name = $request->supplierName;
-           $flight->address = $request->address;
-           $flight->comments = $request->supplierComments;
-           $flight->phone = $request->phoneNumber;
-           $flight->save();
-           
-            return Response::json(['status' => 'Поставщик успешно изменен'], 200);
+    public function updateById(Request $request) {
+        // Находим поставщика по ID
+        $supplier = Suppliers::find($request->suppliers_id);
+    
+        if (!$supplier) {
+            return Response::json(['status' => 'Ошибка, элемент не найден'], 404);
+        }
+    
+        $supplier->name = $request->supplierName;
+        $supplier->address = $request->address;
+        $supplier->comments = $request->supplierComments;
+        $supplier->phone = $request->phoneNumber;
+        
+        $supplier->save();
+    
+        return Response::json(['status' => 'Поставщик успешно изменен'], 200);
     }
 
 }

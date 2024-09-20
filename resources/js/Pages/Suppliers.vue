@@ -55,9 +55,17 @@ function deleteSuppliers(ids){
 
 function updateSuppliers(ids){
     console.log(ids);
-    console.log(suppliers.value.find((el) => el.id = ids));
-
+    console.log(suppliers.value.find((el) => el.id === ids));
+    let supplier = suppliers.value.find((el) => el.id === ids);
+    form.supplierName = supplier.name;
+    form.address = supplier.address;
+    form.supplierComments = supplier.comments;
+    form.phoneNumber = supplier.phone;
+    isOpenModal.value = true;
+    messageResponse.value = 'Редактирование';
+    setTimeout(closemessageResponse, 2000);
 }
+
 
 
 const submitForm = () => {
@@ -181,7 +189,7 @@ const submitForm = () => {
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.phone }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.comments }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex space-x-2"> <!-- Добавлено flex для кнопок -->
-                                        <a @click="updateSuppliers(item.id)" :data-id="item.id" class="text-indigo-600 hover:text-indigo-900">Редактировать</a>
+                                        <a @click="updateSuppliers(item.id)" :data="item.id" class="text-indigo-600 hover:text-indigo-900">Редактировать</a>
                                         <a @click="deleteSuppliers(item.id)" :data-id="item.id" class="text-red-600 hover:text-red-900">Удалить</a>
                                     </td>
                                 </tr>
