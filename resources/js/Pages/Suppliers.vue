@@ -66,6 +66,7 @@ function updateSuppliers(ids){
 }
 
 function updateTable(mes){
+    console.log(mes);
     isEdit = false;
     isEditId = 0;
     isOpenModal.value = true;
@@ -76,13 +77,27 @@ function updateTable(mes){
     form.address = '';
     form.phoneNumber = null;
     setTimeout(closemessageResponse, 2000);
-
 }
 
 
-const submitForm = () => {
-    if (isEdit) {
-        axios({
+function responseSuppliers() {
+    axios({
+            method: 'post',
+            url: '/add-suppliers',
+            data: {
+                csrf: csrf,
+                supplierName: form.supplierName,
+                address: form.address,
+                supplierComments: form.supplierComments,
+                phoneNumber: form.phoneNumber
+        }
+        }).then((response) => {
+            updateTable(response.data.status)
+        })
+}
+
+function updateSuppliersToServ() {
+    axios({
             method: 'post',
             url: '/update-suppliers',
             data: {
@@ -96,22 +111,7 @@ const submitForm = () => {
         }).then((response) => {
             updateTable(response.data.status)
         })
-    } else  {
-        axios({
-            method: 'post',
-            url: '/add-suppliers',
-            data: {
-                csrf: csrf,
-                supplierName: form.supplierName,
-                address: form.address,
-                supplierComments: form.supplierComments,
-                phoneNumber: form.phoneNumber
-        }
-        }).then((response) => {
-            updateTable(response.data.status)
-        })
-    }
-};
+}
 
 </script>
 
@@ -133,7 +133,7 @@ const submitForm = () => {
                     
                   
                     <h3 class="text-lg font-medium mb-4">Добавить нового поставщика</h3>
-                    <form @submit.prevent="submitForm" method="POST" >
+                    <form >
                         <input type="hidden" name="_token" :value="csrf">
                         <div class="mb-4">
                             <label for="supplierName" class="block text-sm font-medium text-gray-700">Имя поставщика</label>
@@ -161,11 +161,11 @@ const submitForm = () => {
                         </div>
 
                         
-                        <button v-if="!isEdit" type="submit"
+                        <button v-if="!isEdit" type="submit" @click.prevent ="responseSuppliers()"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить поставщика
                         </button>
-                        <button v-else type="submit"
+                        <button v-else type="submit" @click.prevent="updateSuppliersToServ()"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Изменить
                         </button>

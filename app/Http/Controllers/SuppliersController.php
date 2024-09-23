@@ -31,7 +31,7 @@ class SuppliersController extends Controller
 
         $suppliers->save();
 
-        return Response::json(['success' => 'Данные добавлены'], 200);
+        return Response::json(['status' => 'Данные добавлены'], 200);
        // return Redirect::route('suppliers',['message' => 'Данные добавлены']);
     }
 
