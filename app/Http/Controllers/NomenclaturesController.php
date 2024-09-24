@@ -31,4 +31,14 @@ class NomenclaturesController extends Controller
         $nomenclatures = Nomenclatures::with('supplier')->get();
         return Response::json(['nomenclatures' => $nomenclatures], 200);
     }
+    public function deleteById(Request $request)
+    {
+    $nomenclature = Nomenclatures::find($request->nomenclature_id);
+    if (!$nomenclature) {
+    return Response::json(['status' => 'Ошибка, элемент не найден'], 404);
+    }
+    $nomenclature->delete();
+    return Response::json(['status' => 'Номенклатура успешно удалена'], 200);
+    }
+
 }

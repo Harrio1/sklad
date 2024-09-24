@@ -56,7 +56,7 @@ class SuppliersController extends Controller
     public function updateById(Request $request){
 
         $flight = Suppliers::findOr($request->supplierId, function () {
-              return Response::json(['status' => 'Ошибка, элемент не найден'], 200);
+              return Response::json(['status' => 'Ошибка, элемент не найден'], 404);
         });
            $flight->name = $request->supplierName;
            $flight->address = $request->address;

@@ -10,8 +10,6 @@ const form = reactive({
     suppliers_id: null,
 });
 
-let isEdit = ref(false);
-let isEditId = ref(0);
 let isOpenModal = ref(false);
 let messageResponse = ref('');
 const suppliers = ref([]);
@@ -59,17 +57,7 @@ function deleteNomenclature(ids) {
     }
 }
 
-function updateNomenclature(ids) {
-    let b = nomenclature.value.find((el) => el.id == ids);
-    form.name = b.name;
-    form.suppliers_id = b.supplier_id;
-    isEdit.value = true;
-    isEditId.value = ids;
-}
-
 function updateTable(mes) {
-    isEdit.value = false;
-    isEditId.value = 0;
     isOpenModal.value = true;
     messageResponse.value = mes;
     getNomenclature();
@@ -125,13 +113,9 @@ function responseNomenclature() {
                             </select>
                         </div>
 
-                        <button v-if="!isEdit" type="submit" @click.prevent="responseNomenclature"
+                        <button type="submit" @click.prevent="responseNomenclature"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить номенклатуру
-                        </button>
-                        <button v-else type="submit" @click.prevent="updateNomenclatureToServ"
-                                class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Изменить
                         </button>
                     </form>
                 </div>
@@ -163,7 +147,6 @@ function responseNomenclature() {
                                     <div class="text-sm text-gray-900">{{ item.supplier.name }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a @click="updateNomenclature(item.id)" :data="item.id" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                     <a @click="deleteNomenclature(item.id)" :data="item.id" class="ml-2 text-red-600 hover:text-red-900">Delete</a>
                                 </td>
                             </tr>
