@@ -1,61 +1,57 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { ref, reactive, onMounted } from 'vue';
+import axios from 'axios';
 
-import { ref } from 'vue'
-import { reactive } from 'vue'
-//import { useForm } from '@inertiajs/vue3'
-import axios from 'axios'
-
-
-let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 const form = reactive({
     supplierName: null,
     address: null,
     supplierComments: null,
     phoneNumber: null
-})
+});
 
 let isEdit = ref(false);
 let isEditId = ref(0);
 let isOpenModal = ref(false);
 let messageResponse = ref('');
+const isLoading = ref(true); // Добавляем состояние загрузки
 
-
-function closemessageResponse(){
+function closemessageResponse() {
     isOpenModal.value = false;
 }
 
-const suppliers = reactive({})
-function  getSuppliers(){
+const suppliers = reactive({});
+function getSuppliers() {
     axios({
-            method: 'get',
-            url: '/get-suppliers',
-        }).then((response) => {
-            suppliers.value = response.data.suppliers
-    })
+        method: 'get',
+        url: '/get-suppliers',
+    }).then((response) => {
+        suppliers.value = response.data.suppliers;
+        isLoading.value = false; // Отключаем прелоадер после загрузки данных
+    });
 }
-getSuppliers();
 
+onMounted(() => {
+    getSuppliers();
+});
 
-function deleteSuppliers(ids){
-
+function deleteSuppliers(ids) {
     let a = confirm('Вы действительно хотите удалить запись?');
     if (a == true) {
         axios.post('/delete-suppliers', {
             suppliers_id: ids
-        }
-        ).then((response) => {
+        }).then((response) => {
             isOpenModal.value = true;
-            messageResponse.value = response.data.status
+            messageResponse.value = response.data.status;
             getSuppliers();
             setTimeout(closemessageResponse, 2000);
-        })
+        });
     }
-
 }
 
-function updateSuppliers(ids){
+function updateSuppliers(ids) {
     let b = suppliers.value.find((el) => el.id == ids);
     form.supplierName = b.name;
     form.supplierComments = b.comments;
@@ -65,8 +61,7 @@ function updateSuppliers(ids){
     isEditId = ids;
 }
 
-function updateTable(mes){
-    console.log(mes);
+function updateTable(mes) {
     isEdit = false;
     isEditId = 0;
     isOpenModal.value = true;
@@ -79,40 +74,38 @@ function updateTable(mes){
     setTimeout(closemessageResponse, 2000);
 }
 
-
 function responseSuppliers() {
     axios({
-            method: 'post',
-            url: '/add-suppliers',
-            data: {
-                csrf: csrf,
-                supplierName: form.supplierName,
-                address: form.address,
-                supplierComments: form.supplierComments,
-                phoneNumber: form.phoneNumber
+        method: 'post',
+        url: '/add-suppliers',
+        data: {
+            csrf: csrf,
+            supplierName: form.supplierName,
+            address: form.address,
+            supplierComments: form.supplierComments,
+            phoneNumber: form.phoneNumber
         }
-        }).then((response) => {
-            updateTable(response.data.status)
-        })
+    }).then((response) => {
+        updateTable(response.data.status);
+    });
 }
 
 function updateSuppliersToServ() {
     axios({
-            method: 'post',
-            url: '/update-suppliers',
-            data: {
-                csrf: csrf,
-                supplierId: isEditId,
-                supplierName: form.supplierName,
-                address: form.address,
-                supplierComments: form.supplierComments,
-                phoneNumber: form.phoneNumber
+        method: 'post',
+        url: '/update-suppliers',
+        data: {
+            csrf: csrf,
+            supplierId: isEditId,
+            supplierName: form.supplierName,
+            address: form.address,
+            supplierComments: form.supplierComments,
+            phoneNumber: form.phoneNumber
         }
-        }).then((response) => {
-            updateTable(response.data.status)
-        })
+    }).then((response) => {
+        updateTable(response.data.status);
+    });
 }
-
 </script>
 
 <template>
@@ -124,7 +117,7 @@ function updateSuppliersToServ() {
             </h2>
         </template>
 
-        <div class="py-12">
+        <div class="py-12" v-if="!isLoading">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
                     <h3 class="text-lg font-medium mb-4">Добавить нового поставщика</h3>
@@ -225,14 +218,14 @@ function updateSuppliersToServ() {
                 </div>
             </div>
         </div>
+        <div v-else class="preloader">
+            <div class="loader"></div>
+        </div>
     </AppLayout>
 </template>
 
-
-
 <style>
-
-.modalMessage{
+.modalMessage {
     position: fixed;
     top: 10%;
     border: 1px solid #ccc;
@@ -244,8 +237,29 @@ function updateSuppliersToServ() {
 a {
     cursor: pointer;
 }
-
-
-
-
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+.loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 </style>
