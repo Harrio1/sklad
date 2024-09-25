@@ -20,19 +20,22 @@ class SuppliersController extends Controller
             'phoneNumber' => ['required', 'integer'],
         ]);
 
-        $suppliers = new Suppliers;
 
-        $suppliers->name = $request->supplierName;
-        $suppliers->address = $request->address;
-        $suppliers->comments = $request->supplierComments;
-        $suppliers->phone = $request->phoneNumber;
+        $pattern = '/^\d{11}$/';
 
-        //dd($suppliers);
+        if (preg_match($pattern, $request->phoneNumber)) {
+           
+            $suppliers = new Suppliers;
+            $suppliers->name = $request->supplierName;
+            $suppliers->address = $request->address;
+            $suppliers->comments = $request->supplierComments;
+            $suppliers->phone = $request->phoneNumber;
+            $suppliers->save();
+            return Response::json(['status' => 'Данные добавлены', 'isOk' => True], 200);
+        } else {
+            return Response::json(['status' => 'Номер телефона недействителен.','isOk' => False], 200);
+        }
 
-        $suppliers->save();
-
-        return Response::json(['status' => 'Данные добавлены'], 200);
-       // return Redirect::route('suppliers',['message' => 'Данные добавлены']);
     }
 
     public function getSuppliers(){
@@ -56,15 +59,23 @@ class SuppliersController extends Controller
     public function updateById(Request $request){
 
         $flight = Suppliers::findOr($request->supplierId, function () {
-              return Response::json(['status' => 'Ошибка, элемент не найден'], 200);
+            return Response::json(['status' => 'Ошибка, элемент не найден', 'isOk' => False], 200);
         });
-           $flight->name = $request->supplierName;
-           $flight->address = $request->address;
-           $flight->comments = $request->supplierComments;
-           $flight->phone = $request->phoneNumber;
-           $flight->save();
+        $pattern = '/^\d{11}$/';
+
+        if (preg_match($pattern, $request->phoneNumber)) {
            
-            return Response::json(['status' => 'Поставщик успешно изменен'], 200);
+            $flight->name = $request->supplierName;
+            $flight->address = $request->address;
+            $flight->comments = $request->supplierComments;
+            $flight->phone = $request->phoneNumber;
+            $flight->save();
+            return Response::json(['status' => 'Поставщик успешно изменен', 'isOk' => True], 200);
+
+        } else {
+            return Response::json(['status' => 'Номер телефона недействителен.','isOk' => False], 200);
+        }
+           
     }
 
 }

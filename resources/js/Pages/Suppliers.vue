@@ -22,11 +22,14 @@ let isEditId = ref(0);
 let isOpenModal = ref(false);
 // сообщение от сервера
 let messageResponse = ref('');
+let messageResponseColor = ref('');
 // загруженны ли данные с сервера
 let isLoaded = ref(false);
 
 function closemessageResponse(){
     isOpenModal.value = false;
+    messageResponse.value = '';
+    messageResponseColor.value = '';
 }
 
 const suppliers = reactive({})
@@ -69,17 +72,25 @@ function updateSuppliers(ids){
     isEditId = ids;
 }
 
-function updateTable(mes){
-    console.log(mes);
-    isEdit = false;
-    isEditId = 0;
-    isOpenModal.value = true;
-    messageResponse.value = mes;
-    getSuppliers();
+function clearSuppliers(){
     form.supplierName = '';
     form.supplierComments = '';
     form.address = '';
     form.phoneNumber = null;
+}
+
+function updateTable(mes, isok){
+    isEdit = false;
+    isEditId = 0;
+    isOpenModal.value = true;
+    messageResponse.value = mes;
+    if (isok) {
+        messageResponseColor.value = 'mgreen';
+    } else {
+        messageResponseColor.value = 'mred';
+    }
+    
+    getSuppliers();
     setTimeout(closemessageResponse, 2000);
 }
 
@@ -96,7 +107,16 @@ function responseSuppliers() {
                 phoneNumber: form.phoneNumber
         }
         }).then((response) => {
-            updateTable(response.data.status)
+            if (response.data.isOk){
+                clearSuppliers() 
+                updateTable(response.data.status, response.data.isOk)
+            } else {
+                isOpenModal.value = true;
+                messageResponse.value = response.data.status;
+                messageResponseColor.value = 'mred';
+                setTimeout(closemessageResponse, 2000);
+            }
+            
         })
 }
 
@@ -113,7 +133,16 @@ function updateSuppliersToServ() {
                 phoneNumber: form.phoneNumber
         }
         }).then((response) => {
-            updateTable(response.data.status)
+            if (response.data.isOk){
+                clearSuppliers() 
+                updateTable(response.data.status, response.data.isOk)
+            } else {
+                isOpenModal.value = true;
+                messageResponse.value = response.data.status;
+                messageResponseColor.value = 'mred';
+                setTimeout(closemessageResponse, 2000);
+            }
+           
         })
 }
 
@@ -124,7 +153,7 @@ function updateSuppliersToServ() {
         <div v-if = "!isLoaded"  class="preload">
             <div class="preload2"></div>
         </div>
-        <div class="modalMessage" v-if="isOpenModal">{{ messageResponse }}</div>
+        <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Поставщики
@@ -234,8 +263,8 @@ function updateSuppliersToServ() {
                 {{ item.comments }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap  text-sm font-medium">
-                <a @click="updateSuppliers(item.id)" :data="item.id" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                <a @click="deleteSuppliers(item.id)" :data="item.id" class="ml-2 text-red-600 hover:text-red-900">Delete</a>
+                <a @click="updateSuppliers(item.id)" :data="item.id" class="text-indigo-600 hover:text-indigo-900">Редактировать</a>
+                <a @click="deleteSuppliers(item.id)" :data="item.id" class="ml-2 text-red-600 hover:text-red-900">Удалить</a>
             </td>
         </tr>
         </tbody>
@@ -251,17 +280,6 @@ function updateSuppliersToServ() {
 
 <style>
 
-.modalMessage{
-    position: fixed;
-    top: 10%;
-    border: 1px solid #ccc;
-    box-shadow: 0px 0px 20px #444;
-    background-color: rgb(0, 95, 13);
-    padding: 20px 40px;
-    color: #ccc;
-}
-a {
-    cursor: pointer;
-}
+
 
 </style>
