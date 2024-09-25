@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\SuppliersController;
+use App\Http\Controllers\NomenclaturesController;
+use App\Http\Controllers\SuppliesController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -52,6 +54,12 @@ Route::middleware([
         return Inertia::render('Supplies');
     })->name('supplies');
 
+    Route::get('/get-supplies', [SuppliesController::class, 'getSupplies'])->name('get-supplies');
+    Route::get('/get-nomenclatures', [SuppliesController::class, 'getNomenclatures'])->name('get-nomenclatures');
+    Route::post('/add-supply', [SuppliesController::class, 'store'])->name('add-supply');
+    Route::post('/update-supply', [SuppliesController::class, 'update'])->name('update-supply');
+    Route::post('/delete-supply', [SuppliesController::class, 'delete'])->name('delete-supply');
+
 
 // nomenclatures
     Route::get('/nomenclature', function () {
@@ -59,6 +67,10 @@ Route::middleware([
     })->name('nomenclature');
 
 
+    Route::post('/add-nomenclature', [NomenclaturesController::class, 'store'])->name('add-nomenclature');
+    Route::get('/get-nomenclature', [NomenclaturesController::class, 'getNomenclatures'])->name('get-nomenclature');
+    Route::post('/delete-nomenclature', [NomenclaturesController::class, 'deleteById'])->name('delete-nomenclature');
+    Route::post('/update-nomenclature', [NomenclaturesController::class, 'updateById'])->name('update-nomenclature');
 
 
 });

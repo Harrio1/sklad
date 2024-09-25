@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('nomenclatures', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignId('suppliers_id')->constrained('users');
+            $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
             $table->timestamps();
         });
     }

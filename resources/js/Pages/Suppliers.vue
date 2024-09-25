@@ -1,8 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 
-import { ref } from 'vue'
-import { reactive } from 'vue'
+import { ref, reactive } from 'vue'
 //import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
 
@@ -16,11 +15,15 @@ const form = reactive({
     phoneNumber: null
 })
 
+// если редактируем
 let isEdit = ref(false);
 let isEditId = ref(0);
+// открыто ли модальное окно 
 let isOpenModal = ref(false);
+// сообщение от сервера
 let messageResponse = ref('');
-
+// загруженны ли данные с сервера
+let isLoaded = ref(false);
 
 function closemessageResponse(){
     isOpenModal.value = false;
@@ -32,7 +35,8 @@ function  getSuppliers(){
             method: 'get',
             url: '/get-suppliers',
         }).then((response) => {
-            suppliers.value = response.data.suppliers
+            suppliers.value = response.data.suppliers;
+            isLoaded.value = true;
     })
 }
 getSuppliers();
@@ -117,8 +121,9 @@ function updateSuppliersToServ() {
 
 <template>
     <AppLayout title="Suppliers">
-
-
+        <div v-if = "!isLoaded"  class="preload">
+            <div class="preload2"></div>
+        </div>
         <div class="modalMessage" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -133,7 +138,7 @@ function updateSuppliersToServ() {
                     
                   
                     <h3 class="text-lg font-medium mb-4">Добавить нового поставщика</h3>
-                    <form >
+                    <form>
                         <input type="hidden" name="_token" :value="csrf">
                         <div class="mb-4">
                             <label for="supplierName" class="block text-sm font-medium text-gray-700">Имя поставщика</label>
@@ -181,7 +186,8 @@ function updateSuppliersToServ() {
                     
 
 
-<table class="min-w-full divide-y divide-gray-200 overflow-x-auto">
+
+<table v-if = "isLoaded" class="min-w-full divide-y divide-gray-200 overflow-x-auto">
     <thead class="bg-gray-50">
         <tr>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -198,6 +204,9 @@ function updateSuppliersToServ() {
             </th>
         </tr>
     </thead>
+    
+        
+ 
     <tbody class="bg-white divide-y divide-gray-200">
         <tr v-for="item in suppliers.value" :key="item.id">
             <td class="px-6 py-4 whitespace-nowrap">
@@ -254,8 +263,5 @@ function updateSuppliersToServ() {
 a {
     cursor: pointer;
 }
-
-
-
 
 </style>

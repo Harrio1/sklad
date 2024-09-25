@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('supplies', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('nomenclatures_id')->constrained('nomenclatures');
-            $table->decimal('price', total: 12, places: 2);
-            $table->decimal('quantity', total: 12, places: 2);
+            $table->foreignId('nomenclature_id')->constrained('nomenclatures');
+            $table->date('supply_date');
+            $table->decimal('quantity', 12, 2);
+            $table->string('unit'); // шт., кг., л.
+            $table->decimal('price', 12, 2);
             $table->timestamps();
         });
     }
