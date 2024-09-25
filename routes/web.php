@@ -6,6 +6,7 @@ use Inertia\Inertia;
 
 use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\NomenclaturesController;
+use App\Http\Controllers\SuppliesController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -36,6 +37,11 @@ Route::middleware([
     Route::get('/supplies', function () {
         return Inertia::render('Supplies');
     })->name('supplies');
+    Route::get('/get-supplies', [SuppliesController::class, 'getSupplies'])->name('get-supplies');
+Route::get('/get-nomenclatures', [SuppliesController::class, 'getNomenclatures'])->name('get-nomenclatures');
+Route::post('/add-supply', [SuppliesController::class, 'store'])->name('add-supply');
+Route::post('/update-supply', [SuppliesController::class, 'update'])->name('update-supply');
+Route::post('/delete-supply', [SuppliesController::class, 'delete'])->name('delete-supply');
 
     Route::get('/nomenclature', function () {
         return Inertia::render('Nomenclature');
