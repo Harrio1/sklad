@@ -134,7 +134,7 @@ function editSupply(supply) {
                         </div>
 
                         <div class="mb-4">
-                            <label for="price" class="block text-sm font-medium text-gray-700">Цена</label>
+                            <label for="price" class="block text-sm font-medium text-gray-700">Цена ₽</label>
                             <input type="number" id="price" v-model="form.price" step="0.01" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
@@ -154,7 +154,7 @@ function editSupply(supply) {
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Номенклатура</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Количество</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена (₽)</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                             </tr>
                         </thead>
