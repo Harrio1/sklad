@@ -278,11 +278,6 @@ function updateSuppliersToServ() {
         </div>
     </AppLayout>
 </template>
-
-
-
 <style>
-
-
 
 </style>

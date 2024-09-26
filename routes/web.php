@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\NomenclaturesController;
 use App\Http\Controllers\SuppliesController;
+use App\Http\Controllers\ProductsController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -72,5 +73,12 @@ Route::middleware([
     Route::post('/delete-nomenclature', [NomenclaturesController::class, 'deleteById'])->name('delete-nomenclature');
     Route::post('/update-nomenclature', [NomenclaturesController::class, 'updateById'])->name('update-nomenclature');
 
+    // products 
+    Route::get('/products', function () {
+        return Inertia::render('Products');
+    })->name('products');
+
+    Route::get('/get-products', [ProductsController::class, 'getProducts'])->name('get-products');
+    Route::get('/add-products', [ProductsController::class, 'store'])->name('add-products');
 
 });
