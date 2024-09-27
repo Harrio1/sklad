@@ -44,35 +44,6 @@ function  getProducts(){
 getProducts();
 
 
-// function deleteSuppliers(ids){
-
-//     let a = confirm('Вы действительно хотите удалить запись?');
-//     if (a == true) {
-//         axios.post('/delete-suppliers', {
-//             suppliers_id: ids
-//         }
-//         ).then((response) => {
-//             isOpenModal.value = true;
-//             messageResponse.value = response.data.status
-//             getProducts();
-//             setTimeout(closemessageResponse, 2000);
-//         })
-//     }
-
-// }
-
-// function updateSuppliers(ids){
-//     let b = suppliers.value.find((el) => el.id == ids);
-//     form.supplierName = b.name;
-//     form.supplierComments = b.comments;
-//     form.address = b.address;
-//     form.phoneNumber = b.phone;
-//     isEdit = true;
-//     isEditId = ids;
-// }
-
-
-
 function updateTable(mes, isok){
     isEdit = false;
     isEditId = 0;
@@ -118,65 +89,52 @@ function responseProducts() {
 
 function updateProductsToServ() {
      
+    axios({
+            method: 'post',
+            url: '/update-products',
+            data: {
+                csrf: csrf,
+                id: isEditId,
+                name: form.name,
+                price: form.price
+        }
+        }).then((response) => {
+            if (response.data.isOk){
+                clearProducts() 
+                updateTable(response.data.status, response.data.isOk)
+            } else {
+                isOpenModal.value = true;
+                messageResponse.value = response.data.status;
+                messageResponseColor.value = 'mred';
+                setTimeout(closemessageResponse, 2000);
+            }
+           
+        })
+
 }
 
 function updateProducts(ids){
-
+    let b = products.value.find((el) => el.id == ids);
+    form.name = b.name;
+    form.price = b.price;
+    isEdit = true;
+    isEditId = ids;
 }
 
 function deleteProducts(ids){
-
+    let a = confirm('Вы действительно хотите удалить запись?');
+    if (a == true) {
+        axios.post('/delete-products', {
+            id: ids
+        }
+        ).then((response) => {
+            isOpenModal.value = true;
+            messageResponse.value = response.data.status
+            getProducts();
+            setTimeout(closemessageResponse, 2000);
+        })
+    }
 }
-// function responseSuppliers() {
-//     axios({
-//             method: 'post',
-//             url: '/add-suppliers',
-//             data: {
-//                 csrf: csrf,
-//                 supplierName: form.supplierName,
-//                 address: form.address,
-//                 supplierComments: form.supplierComments,
-//                 phoneNumber: form.phoneNumber
-//         }
-//         }).then((response) => {
-//             if (response.data.isOk){
-//                 clearSuppliers() 
-//                 updateTable(response.data.status, response.data.isOk)
-//             } else {
-//                 isOpenModal.value = true;
-//                 messageResponse.value = response.data.status;
-//                 messageResponseColor.value = 'mred';
-//                 setTimeout(closemessageResponse, 2000);
-//             }
-            
-//         })
-// }
-
-// function updateSuppliersToServ() {
-//     axios({
-//             method: 'post',
-//             url: '/update-suppliers',
-//             data: {
-//                 csrf: csrf,
-//                 supplierId: isEditId,
-//                 supplierName: form.supplierName,
-//                 address: form.address,
-//                 supplierComments: form.supplierComments,
-//                 phoneNumber: form.phoneNumber
-//         }
-//         }).then((response) => {
-//             if (response.data.isOk){
-//                 clearSuppliers() 
-//                 updateTable(response.data.status, response.data.isOk)
-//             } else {
-//                 isOpenModal.value = true;
-//                 messageResponse.value = response.data.status;
-//                 messageResponseColor.value = 'mred';
-//                 setTimeout(closemessageResponse, 2000);
-//             }
-           
-//         })
-// }
 
 </script>
 

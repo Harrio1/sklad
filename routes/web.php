@@ -79,6 +79,7 @@ Route::middleware([
     })->name('products');
 
     Route::get('/get-products', [ProductsController::class, 'getProducts'])->name('get-products');
-    Route::get('/add-products', [ProductsController::class, 'store'])->name('add-products');
-
+    Route::post('/add-products', [ProductsController::class, 'store'])->name('add-products');
+    Route::post('/update-products', [ProductsController::class, 'updateById'])->name('update-products');
+    Route::post('/delete-products', [ProductsController::class, 'deleteById'])->name('delete-products');
 });
