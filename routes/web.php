@@ -8,6 +8,7 @@ use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\NomenclaturesController;
 use App\Http\Controllers\SuppliesController;
 use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\ProductsNomenclatureController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -82,4 +83,8 @@ Route::middleware([
     Route::post('/add-products', [ProductsController::class, 'store'])->name('add-products');
     Route::post('/update-products', [ProductsController::class, 'updateById'])->name('update-products');
     Route::post('/delete-products', [ProductsController::class, 'deleteById'])->name('delete-products');
+
+    // products nomenclatures
+    Route::get('/get-product-by-id/{id}', [ProductsNomenclatureController::class, 'getProductById'])->name('get-product-by-id');
+
 });

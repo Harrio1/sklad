@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive } from 'vue'
 //import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
-
+import { Link } from '@inertiajs/vue3';
 
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
 
@@ -139,7 +139,7 @@ function deleteProducts(ids){
 </script>
 
 <template>
-    <AppLayout title="Suppliers">
+    <AppLayout title="Products">
         <div v-if = "!isLoaded"  class="preload">
             <div class="preload2"></div>
         </div>
@@ -197,16 +197,10 @@ function deleteProducts(ids){
     <thead class="bg-gray-50">
         <tr>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Имя
+                Название
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Адрес
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Номер телефона
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Комментарий
+                Цена
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Действия
@@ -219,7 +213,14 @@ function deleteProducts(ids){
     <tbody class="bg-white divide-y divide-gray-200">
         <tr v-for="item in products.value" :key="item.id">
             <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ item.name }}</div> 
+                <div class="text-sm text-gray-900">
+                    
+                    <Link :href="'/get-product-by-id/'+item.id" >
+                        {{ item.name }}
+                    </Link>
+                    
+                
+                </div> 
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">{{ item.price }}</div>
