@@ -87,7 +87,12 @@ function resetForm() {
 function editSupply(supply) {
     isEdit.value = true;
     isEditId.value = supply.id;
-    Object.keys(form).forEach(key => form[key] = supply[key]);
+    form.nomenclatureId = supply.nomenclature_id;
+    form.supplyDate = supply.supply_date;
+    form.quantity = supply.quantity;
+    form.unit = supply.unit;
+    form.price = supply.price;
+    
 }
 </script>
 
@@ -104,7 +109,7 @@ function editSupply(supply) {
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
                     <h3 class="text-lg font-medium mb-4">{{ isEdit ? 'Редактировать поставку' : 'Добавить новую поставку' }}</h3>
-                    <form @submit.prevent="isEdit ? updateSupply() : addSupply()">
+                    <form @submit.prevent >
                         <div class="mb-4">
                             <label for="nomenclatureId" class="block text-sm font-medium text-gray-700">Номенклатура</label>
                             <select id="nomenclatureId" v-model="form.nomenclatureId" required
@@ -139,9 +144,16 @@ function editSupply(supply) {
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
 
-                        <button type="submit"
+                       
+
+
+                        <button v-if="!isEdit" type="submit" @click.prevent =" addSupply()"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            {{ isEdit ? 'Обновить поставку' : 'Добавить поставку' }}
+                            Добавить поставку
+                        </button>
+                        <button v-else type="submit" @click.prevent="updateSupply()"
+                                class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Изменить
                         </button>
                     </form>
                 </div>

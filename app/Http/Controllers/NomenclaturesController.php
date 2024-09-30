@@ -40,5 +40,4 @@ class NomenclaturesController extends Controller
     $nomenclature->delete();
     return Response::json(['status' => 'Номенклатура успешно удалена'], 200);
     }
-
 }

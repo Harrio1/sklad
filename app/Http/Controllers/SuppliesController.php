@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+
+
 use App\Models\Supplies;
 use App\Models\Nomenclatures;
 use Illuminate\Http\Request;
@@ -29,8 +31,19 @@ class SuppliesController extends Controller
     public function update(Request $request)
     {
         $supply = Supplies::find($request->supplyId);
-        $supply->update($request->all());
-        return response()->json(['status' => 'Поставка успешно обновлена', 'supply' => $supply]);
+
+
+        $flight = Supplies::findOr($request->supplyId, function () {
+            return response()->json(['status' => 'Ошибка, элемент не найден']);
+        });
+            $flight->nomenclature_id = $request->nomenclatureId;
+            $flight->supply_date = $request->supplyDate;
+            $flight->quantity = $request->quantity;
+            $flight->unit = $request->unit;
+            $flight->price = $request->price;
+            $flight->save();
+
+        return response()->json(['status' => 'Поставка успешно обновлена']);
     }
 
     public function delete(Request $request)
