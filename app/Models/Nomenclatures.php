@@ -15,4 +15,11 @@ class Nomenclatures extends Model
     {
         return $this->belongsTo(Suppliers::class);
     }
+
+    public function products()
+    {
+        return $this->belongsToMany(Products::class, 'products__nomenclatures', 'nomenclature_id', 'product_id')
+            ->withPivot('quantity', 'price')
+            ->withTimestamps();
+    }
 }

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('products__nomenclatures', function (Blueprint $table) {
             $table->id();
             $table->decimal('quantity', 12, 2);
+            $table->decimal('price', 12, 2); // Добавляем столбец price
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->foreignId('nomenclature_id')->constrained('nomenclatures')->onDelete('cascade');
             $table->timestamps();

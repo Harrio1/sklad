@@ -54,14 +54,17 @@ const logout = () => {
                                 <NavLink :href="route('suppliers')" :active="route().current('suppliers')">
                                     Поставщики
                                 </NavLink>
+                                <NavLink :href="route('nomenclature')" :active="route().current('nomenclature')">
+                                    Номенклатура
+                                </NavLink>                                
                                 <NavLink :href="route('supplies')" :active="route().current('supplies')">
                                     Поставки
                                 </NavLink>
-                                <NavLink :href="route('nomenclature')" :active="route().current('nomenclature')">
-                                    Номенклатура
-                                </NavLink>
                                 <NavLink :href="route('products')" :active="route().current('products')">
                                     Продукты
+                                </NavLink>
+                                <NavLink :href="route('products_nomenclatures')" :active="route().current('products_nomenclatures')">
+                                    Номенклатура продукта
                                 </NavLink>
                             </div>
                         </div>
