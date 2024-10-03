@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-
-
 use App\Models\Supplies;
 use App\Models\Nomenclatures;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SuppliesController extends Controller
 {
@@ -24,8 +23,38 @@ class SuppliesController extends Controller
 
     public function store(Request $request)
     {
-        $supply = Supplies::create($request->all());
-        return response()->json(['status' => 'Поставка успешно добавлена', 'supply' => $supply]);
+        $validated = $request->validate([
+            'nomenclature_id' => 'required|exists:nomenclatures,id',
+            'supply_date' => 'required|date',
+            'quantity' => 'required|numeric|min:0',
+            'unit' => 'required|in:шт.,кг.,л.',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $nomenclature = Nomenclatures::findOrFail($request->nomenclature_id);
+
+            $supply = new Supplies;
+            $supply->nomenclature_id = $request->nomenclature_id;
+            $supply->supply_date = $request->supply_date;
+            $supply->quantity = $request->quantity;
+            $supply->unit = $request->unit;
+            $supply->price = $nomenclature->price_per_unit * $request->quantity;
+            $supply->save();
+
+            // Обновляем данные в номенклатуре
+            $nomenclature->total_quantity += $request->quantity;
+            $nomenclature->total_price += $supply->price;
+            $nomenclature->save();
+
+            DB::commit();
+
+            return response()->json(['status' => 'Поставка успешно добавлена', 'supply' => $supply]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['status' => 'Ошибка при добавлении поставки', 'error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request)

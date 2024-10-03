@@ -3,32 +3,29 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 
-let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 const form = reactive({
     product_id: null,
-    nomenclatures: []
+    nomenclatures: [{ id: null, quantity: 0, price: 0 }]
 });
 
-let isOpenModal = ref(false);
-let messageResponse = ref('');
+const isOpenModal = ref(false);
+const messageResponse = ref('');
 const products = ref([]);
-const nomenclatures = ref([]);
 const productsNomenclatures = ref([]);
 const isLoading = ref(true);
 const availableNomenclatures = ref([]);
 const isLoadingNomenclatures = ref(false);
-const allNomenclatures = ref([]);
 
 function closemessageResponse() {
     isOpenModal.value = false;
 }
 
 function getProductsNomenclatures() {
-    axios.get('/get-products-nomenclatures')
+    axios.get(route('get-products-nomenclatures'))
         .then((response) => {
             products.value = response.data.products;
-            nomenclatures.value = response.data.nomenclatures;
             productsNomenclatures.value = response.data.products;
             isLoading.value = false;
         });
@@ -39,13 +36,9 @@ onMounted(() => {
 });
 
 function addNomenclatureLine() {
-    if (allNomenclatures.value.length > form.nomenclatures.length) {
-        form.nomenclatures.push({ id: null, quantity: null, price: null });
+    if (canAddNomenclatureLine.value) {
+        form.nomenclatures.push({ id: null, quantity: 0, price: 0 });
     }
-}
-
-function updateNomenclatureLine(index, field, value) {
-    form.nomenclatures[index][field] = value;
 }
 
 function removeNomenclatureLine(index) {
@@ -53,8 +46,7 @@ function removeNomenclatureLine(index) {
 }
 
 function deleteProductNomenclature(productId, nomenclatureId) {
-    let confirmed = confirm('Вы действительно хотите удалить эту связь?');
-    if (confirmed) {
+    if (confirm('Вы действительно хотите удалить эту связь?')) {
         axios.post('/delete-products-nomenclatures', {
             product_id: productId,
             nomenclature_id: nomenclatureId,
@@ -73,53 +65,52 @@ function submitForm() {
             isOpenModal.value = true;
             messageResponse.value = response.data.status;
             getProductsNomenclatures();
-            // Очищаем форму полностью
             form.product_id = null;
             form.nomenclatures = [];
-            // Обновляем список доступных номенклатур
             loadAvailableNomenclatures();
             setTimeout(closemessageResponse, 2000);
         });
 }
 
-// Функция для загрузки доступных номенклатур
 function loadAvailableNomenclatures() {
-    if (!form.product_id) {
-        allNomenclatures.value = [];
-        return;
-    }
-    
     isLoadingNomenclatures.value = true;
-    axios.get('/get-available-nomenclatures', {
-        params: { product_id: form.product_id }
-    }).then((response) => {
-        allNomenclatures.value = response.data.nomenclatures;
-        isLoadingNomenclatures.value = false;
-    }).catch((error) => {
-        console.error('Ошибка при загрузке доступных номенклатур:', error);
-        isLoadingNomenclatures.value = false;
-    });
+    axios.get('/get-available-nomenclatures')
+        .then((response) => {
+            availableNomenclatures.value = response.data.nomenclatures;
+            isLoadingNomenclatures.value = false;
+        }).catch((error) => {
+            console.error('Ошибка при загрузке доступных номенклатур:', error);
+            isLoadingNomenclatures.value = false;
+        });
 }
 
-// Следим за изменением product_id и загружаем доступные номенклатуры
 watch(() => form.product_id, (newValue) => {
     if (newValue) {
         loadAvailableNomenclatures();
-        form.nomenclatures = []; // Очищаем выбранные номенклатуры при смене продукта
+        form.nomenclatures = [{ id: null, quantity: 0, price: 0 }];
     } else {
-        availableNomenclatures.value = [];
-        form.nomenclatures = [];
+        form.nomenclatures = [{ id: null, quantity: 0, price: 0 }];
     }
 });
 
-// Вычисляемое свойство для проверки, можно ли добавить еще одну строку
 const canAddNomenclatureLine = computed(() => {
-    return allNomenclatures.value.length > form.nomenclatures.length;
+    return availableNomenclatures.value.length > form.nomenclatures.length;
 });
 
-// Функция для проверки, доступна ли номенклатура для выбора
 function isNomenclatureAvailable(nomenclatureId, currentIndex) {
     return !form.nomenclatures.some((n, index) => index !== currentIndex && n.id === nomenclatureId);
+}
+
+// Добавим новую функцию для расчета общей цены
+function calculateTotalPrice(nomenclature) {
+    return nomenclature.price_per_unit * nomenclature.pivot.quantity;
+}
+
+function calculatePrice(nomenclature) {
+    const selectedNomenclature = availableNomenclatures.value.find(n => n.id === nomenclature.id);
+    if (selectedNomenclature) {
+        nomenclature.price = selectedNomenclature.price_per_unit * nomenclature.quantity;
+    }
 }
 </script>
 
@@ -143,6 +134,7 @@ function isNomenclatureAvailable(nomenclatureId, currentIndex) {
                             <label for="product" class="block text-sm font-medium text-gray-700">Продукт</label>
                             <select id="product" v-model="form.product_id" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Выберите продукт</option>
                                 <option v-for="product in products" :key="product.id" :value="product.id">
                                     {{ product.name }}
                                 </option>
@@ -154,13 +146,14 @@ function isNomenclatureAvailable(nomenclatureId, currentIndex) {
                                 <label :for="'nomenclature-' + index" class="block text-sm font-medium text-gray-700">Номенклатура</label>
                                 <select :id="'nomenclature-' + index" 
                                         v-model="nomenclature.id"
+                                        @change="calculatePrice(nomenclature)"
                                         required
                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
                                     <option :value="null">Выберите номенклатуру</option>
-                                    <option v-for="n in allNomenclatures" 
+                                    <option v-for="n in availableNomenclatures" 
                                             :key="n.id" 
                                             :value="n.id"
-                                            :disabled="!isNomenclatureAvailable(n.id, index)">
+                                            :disabled="form.nomenclatures.some(fn => fn.id === n.id && fn !== nomenclature)">
                                         {{ n.name }}
                                     </option>
                                 </select>
@@ -168,15 +161,16 @@ function isNomenclatureAvailable(nomenclatureId, currentIndex) {
                             <div class="w-1/4">
                                 <label :for="'quantity-' + index" class="block text-sm font-medium text-gray-700">Количество</label>
                                 <input type="number" :id="'quantity-' + index" 
-                                       v-model="nomenclature.quantity"
+                                       v-model.number="nomenclature.quantity"
+                                       @input="calculatePrice(nomenclature)"
                                        required min="0" step="0.01"
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                             </div>
                             <div class="w-1/4">
                                 <label :for="'price-' + index" class="block text-sm font-medium text-gray-700">Цена</label>
                                 <input type="number" :id="'price-' + index" 
-                                       v-model="nomenclature.price"
-                                       required min="0" step="0.01"
+                                       v-model.number="nomenclature.price"
+                                       readonly
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                             </div>
                             <button type="button" @click="removeNomenclatureLine(index)" class="mt-6 text-red-600 hover:text-red-900">
@@ -291,13 +285,5 @@ function isNomenclatureAvailable(nomenclatureId, currentIndex) {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-}
-.loader-small {
-    border: 4px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 4px solid #3498db;
-    width: 20px;
-    height: 20px;
-    animation: spin 1s linear infinite;
 }
 </style>

@@ -1,17 +1,18 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 
-import { ref, reactive } from 'vue'
-//import { useForm } from '@inertiajs/vue3'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
 import { Link } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
 
-const form = reactive({
-    name: null,
-    price: null,
-})
+const form = useForm({
+    name: '',
+    markup: '',
+});
 
 // если редактируем
 let isEdit = ref(false);
@@ -33,10 +34,8 @@ function closemessageResponse(){
 const products = reactive({})
 
 function  getProducts(){
-    axios({
-            method: 'get',
-            url: '/get-products',
-        }).then((response) => {
+    axios.get(route('products.index'))
+        .then(response => {
             products.value = response.data.products;
             isLoaded.value = true;
     })
@@ -58,83 +57,165 @@ function updateTable(mes, isok){
     getProducts();
     setTimeout(closemessageResponse, 2000);
 }
-
-function clearProducts(){
-    form.name = '';
-    form.price = '';
-}
-
-function responseProducts() {
-    axios({
-            method: 'post',
-            url: '/add-products',
-            data: {
-                csrf: csrf,
-                name: form.name,
-                price: form.price,
-        }
-        }).then((response) => {
-            if (response.data.isOk){
-                clearProducts() 
-                updateTable(response.data.status, response.data.isOk)
-            } else {
-                isOpenModal.value = true;
-                messageResponse.value = response.data.status;
-                messageResponseColor.value = 'mred';
-                setTimeout(closemessageResponse, 2000);
-            }
-            
-        })
-}
-
-function updateProductsToServ() {
-     
-    axios({
-            method: 'post',
-            url: '/update-products',
-            data: {
-                csrf: csrf,
-                id: isEditId,
-                name: form.name,
-                price: form.price
-        }
-        }).then((response) => {
-            if (response.data.isOk){
-                clearProducts() 
-                updateTable(response.data.status, response.data.isOk)
-            } else {
-                isOpenModal.value = true;
-                messageResponse.value = response.data.status;
-                messageResponseColor.value = 'mred';
-                setTimeout(closemessageResponse, 2000);
-            }
-           
-        })
-
-}
-
 function updateProducts(ids){
     let b = products.value.find((el) => el.id == ids);
     form.name = b.name;
-    form.price = b.price;
-    isEdit = true;
-    isEditId = ids;
+    form.markup = b.markup;
+    isEdit.value = true;
+    isEditId.value = ids;
+}
+
+function clearProducts(){
+    form.name = '';
+    form.markup = '';
+}
+
+function cancelEdit() {
+    isEdit.value = false;
+    isEditId.value = 0;
+    form.reset();
 }
 
 function deleteProducts(ids){
     let a = confirm('Вы действительно хотите удалить запись?');
     if (a == true) {
-        axios.post('/delete-products', {
-            id: ids
-        }
-        ).then((response) => {
-            isOpenModal.value = true;
-            messageResponse.value = response.data.status
-            getProducts();
-            setTimeout(closemessageResponse, 2000);
-        })
+        axios.delete(route('products.delete', ids))
+            .then(response => {
+                isOpenModal.value = true;
+                messageResponse.value = response.data.status
+                getProducts();
+                setTimeout(closemessageResponse, 2000);
+            })
     }
 }
+
+const selectedProduct = ref(null);
+const showModal = ref(false);
+
+function openProductDetails(productId) {
+    axios.get(route('products.details', productId))
+        .then(response => {
+            selectedProduct.value = response.data.product;
+            showModal.value = true;
+        })
+        .catch(error => {
+            console.error('Ошибка при получении деталей продукта:', error);
+        });
+}
+
+function closeModal() {
+    showModal.value = false;
+    selectedProduct.value = null;
+}
+
+const searchQuery = ref('');
+const sortBy = ref('name');
+const sortOrder = ref('asc');
+
+const minPrice = ref('');
+const maxPrice = ref('');
+
+// Сортировка и поиск
+// const filteredAndSortedProducts = computed(() => {
+//     let filtered = products.value.filter(product => 
+//         product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) &&
+//         (minPrice.value === '' || product.total_price >= parseFloat(minPrice.value)) &&
+//         (maxPrice.value === '' || product.total_price <= parseFloat(maxPrice.value))
+//     );
+    
+//     filtered.sort((a, b) => {
+//         let modifier = sortOrder.value === 'asc' ? 1 : -1;
+//         if (a[sortBy.value] < b[sortBy.value]) return -1 * modifier;
+//         if (a[sortBy.value] > b[sortBy.value]) return 1 * modifier;
+//         return 0;
+//     });
+    
+//     return filtered;
+// });
+
+// function toggleSort(column) {
+//     if (sortBy.value === column) {
+//         sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+//     } else {
+//         sortBy.value = column;
+//         sortOrder.value = 'asc';
+//     }
+// }
+
+const errors = ref({});
+
+function validateForm() {
+    errors.value = {};
+    if (!form.name) errors.value.name = 'Название продукта обязательно';
+    if (!form.markup) errors.value.markup = 'Наценка обязательна';
+    if (isNaN(form.markup) || form.markup < 0) errors.value.markup = 'Наценка должна быть положительным числом';
+    return Object.keys(errors.value).length === 0;
+}
+
+function submitForm() {
+    if (validateForm()) {
+        if (isEdit.value) {
+            form.put(route('products.update', isEditId.value), {
+                preserveScroll: true,
+                onSuccess: (response) => {
+                    if (response?.props?.flash?.message) {
+                        isOpenModal.value = true;
+                        messageResponse.value = response.props.flash.message;
+                        messageResponseColor.value = 'mgreen';
+                        setTimeout(closemessageResponse, 2000);
+                    }
+                    form.reset();
+                    isEdit.value = false;
+                    isEditId.value = 0;
+                    getProducts();
+                },
+                onError: (errors) => {
+                    console.error(errors);
+                }
+            });
+        } else {
+            form.post(route('products.store'), {
+                preserveScroll: true,
+                onSuccess: (response) => {
+                    if (response?.props?.flash?.message) {
+                        isOpenModal.value = true;
+                        messageResponse.value = response.props.flash.message;
+                        messageResponseColor.value = 'mgreen';
+                        setTimeout(closemessageResponse, 2000);
+                    }
+                    form.reset();
+                    getProducts();
+                },
+                onError: (errors) => {
+                    console.error(errors);
+                }
+            });
+        }
+    }
+}
+
+const editingProduct = ref(null);
+
+// function startEditing(product) {
+//     editingProduct.value = { ...product };
+// }
+
+// function cancelEditing() {
+//     editingProduct.value = null;
+// }
+
+// function saveEdit() {
+//     if (validateForm(editingProduct.value)) {
+//         axios.put(`/update-product/${editingProduct.value.id}`, editingProduct.value)
+//             .then(response => {
+//                 getProducts();
+//                 editingProduct.value = null;
+//             })
+//             .catch(error => {
+//                 console.error('Error updating product:', error);
+//             });
+//     }
+// }
 
 </script>
 
@@ -157,30 +238,24 @@ function deleteProducts(ids){
                     
                   
                     <h3 class="text-lg font-medium mb-4">Добавить новый продукт</h3>
-                    <form>
+                    <form @submit.prevent="submitForm">
                         <input type="hidden" name="_token" :value="csrf">
                         <div class="mb-4">
-                            <label for="productName" class="block text-sm font-medium text-gray-700">Название продукта</label>
-                            <input type="text" id="productName" v-model="form.name" required
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                            <label for="name" class="block text-sm font-medium text-gray-700">Название продукта</label>
+                            <input type="text" id="name" v-model="form.name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                            <p v-if="errors.name" class="mt-2 text-sm text-red-600">{{ errors.name }}</p>
                         </div>
-
-                
                         <div class="mb-4">
-                            <label for="productPrice" class="block text-sm font-medium text-gray-700">Цена продукта</label>
-                            <input type="text" id="productPrice" v-model="form.price" required
-                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                            <label for="markup" class="block text-sm font-medium text-gray-700">Наценка (%)</label>
+                            <input type="number" id="markup" v-model="form.markup" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                            <p v-if="errors.markup" class="mt-2 text-sm text-red-600">{{ errors.markup }}</p>
                         </div>
-                        
-                        <button v-if="!isEdit" type="submit" @click.prevent ="responseProducts()"
-                                class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Добавить поставщика
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            {{ isEdit ? 'Обновить продукт' : 'Добавить продукт' }}
                         </button>
-                        <button v-else type="submit" @click.prevent="updateProductsToServ()"
-                                class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Изменить
+                        <button v-if="isEdit" type="button" @click="cancelEdit" class="ml-2 inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Отменить
                         </button>
-                        
                     </form>
                     
                     
@@ -200,7 +275,13 @@ function deleteProducts(ids){
                 Название
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Цена
+                Наценка
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Себестоимость
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Итоговая цена
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Действия
@@ -223,7 +304,13 @@ function deleteProducts(ids){
                 </div> 
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ item.markup }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">{{ item.price }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ item.total_price.toFixed(2) }}</div>
             </td>
            
             <td class="px-6 py-4 whitespace-nowrap  text-sm font-medium">
@@ -237,8 +324,37 @@ function deleteProducts(ids){
                 </div>
             </div>
         </div>
+        <div v-if="selectedProduct" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">{{ selectedProduct.name }}</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500">
+                            Номенклатура:
+                            <span v-for="nomenclature in selectedProduct.nomenclatures" :key="nomenclature.id">
+                                {{ nomenclature.name }},
+                            </span>
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Количество: {{ selectedProduct.total_quantity }}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Общая цена номенклатуры: {{ selectedProduct.total_nomenclature_price }}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Себестоимость продукта: {{ selectedProduct.cost_price }}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Стоимость продукта с наценкой: {{selectedProduct.total_price}} 
+                        </p>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="ok-btn" @click="closeModal" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                            Закрыть
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </AppLayout>
 </template>
-<style>
-
-</style>

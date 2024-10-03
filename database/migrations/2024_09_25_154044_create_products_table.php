@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->decimal('price', 12, 2);
+            $table->decimal('price', 12, 2)->default(0); // Добавлено значение по умолчанию
+            $table->decimal('total_price', 12, 2)->default(0); // Добавлено значение по умолчанию
             $table->timestamps();
         });
     }

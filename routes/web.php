@@ -80,20 +80,18 @@ Route::middleware([
         return Inertia::render('Products');
     })->name('products');
 
-    Route::get('/get-products', [ProductsController::class, 'getProducts'])->name('get-products');
-    Route::post('/add-products', [ProductsController::class, 'store'])->name('add-products');
-    Route::post('/update-products', [ProductsController::class, 'updateById'])->name('update-products');
-    Route::post('/delete-products', [ProductsController::class, 'deleteById'])->name('delete-products');
-
-    // products nomenclatures       
-    Route::get('/products-nomenclatures', function () {
-        return Inertia::render('ProductsNomenclatures');
-    })->name('products_nomenclatures');
-
-    Route::post('/add-products-nomenclatures', [ProductsNomenclatureController::class, 'store'])->name('add-products-nomenclatures');
-    Route::get('/get-products-nomenclatures', [ProductsNomenclatureController::class, 'getProductsNomenclatures'])->name('get-products-nomenclatures');
-    Route::post('/delete-products-nomenclatures', [ProductsNomenclatureController::class, 'deleteById'])->name('delete-products-nomenclatures');
-
+    Route::get('/get-products', [ProductsController::class, 'getProducts'])->name('products.index');
+    Route::post('/add-product', [ProductsController::class, 'store'])->name('products.store');
+    Route::put('/update-product/{id}', [ProductsController::class, 'update'])->name('products.update');
+    Route::delete('/delete-product/{id}', [ProductsController::class, 'delete'])->name('products.delete');
+    Route::get('/get-product-details/{id}', [ProductsController::class, 'getProductDetails'])->name('products.details');
     Route::get('/get-available-nomenclatures', [ProductsNomenclatureController::class, 'getAvailableNomenclatures'])->name('get-available-nomenclatures');
-
+    Route::get('/get-product-details/{id}', [ProductsController::class, 'getProductDetails'])->name('get-product-details');
+    // products nomenclatures
+    Route::get('/products-nomenclatures', [ProductsNomenclatureController::class, 'index'])->name('products_nomenclatures');
+    Route::get('/get-products-nomenclatures', [ProductsNomenclatureController::class, 'getProductsNomenclatures'])->name('get-products-nomenclatures');
+    Route::post('/add-products-nomenclatures', [ProductsNomenclatureController::class, 'store'])->name('add-products-nomenclatures');
+    Route::post('/update-products-nomenclatures', [ProductsNomenclatureController::class, 'update'])->name('update-products-nomenclatures');
+    Route::post('/delete-products-nomenclatures', [ProductsNomenclatureController::class, 'delete'])->name('delete-products-nomenclatures');
+    
 });

@@ -8,6 +8,7 @@ let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('conte
 const form = reactive({
     name: null,
     suppliers_id: null,
+    price_per_unit: null,
 });
 
 let isOpenModal = ref(false);
@@ -66,6 +67,7 @@ function updateTable(mes) {
     getNomenclature();
     form.name = '';
     form.suppliers_id = '';
+    form.price_per_unit = '';
     setTimeout(closemessageResponse, 2000);
 }
 
@@ -77,6 +79,7 @@ function responseNomenclature() {
             csrf: csrf,
             name: form.name,
             supplier_id: form.suppliers_id,
+            price_per_unit: form.price_per_unit,
         },
     }).then((response) => {
         updateTable(response.data.status);
@@ -116,6 +119,12 @@ function responseNomenclature() {
                             </select>
                         </div>
 
+                        <div class="mb-4">
+                            <label for="price_per_unit" class="block text-sm font-medium text-gray-700">Цена за единицу</label>
+                            <input type="number" id="price_per_unit" v-model="form.price_per_unit" step="0.01" required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                        </div>
+
                         <button type="submit" @click.prevent="responseNomenclature"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить номенклатуру
@@ -136,6 +145,15 @@ function responseNomenclature() {
                                         Поставщик
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Цена за единицу
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Общее количество
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Общая цена
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Действие
                                     </th>
                                 </tr>
@@ -149,6 +167,15 @@ function responseNomenclature() {
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ item.supplier.name }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.price_per_unit }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.total_quantity }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.total_price }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <a @click="deleteNomenclature(item.id)" :data="item.id" class="ml-2 text-red-600 hover:text-red-900">Delete</a>

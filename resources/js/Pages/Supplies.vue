@@ -1,16 +1,13 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 const form = reactive({
-    nomenclatureId: null,
-    supplyDate: null,
-    quantity: null,
-    unit: 'шт.',
-    price: null
+    supplier_id: null,
+    nomenclatures: [{ id: null, quantity: 0, price: 0, unit: '' }]
 });
 
 const units = ['шт.', 'кг.', 'л.'];
@@ -22,6 +19,10 @@ let messageResponse = ref('');
 let nomenclatures = ref([]);
 let supplies = ref([]);
 const isLoading = ref(true); // Добавляем состояние загрузки
+
+const totalPrice = computed(() => {
+    return calculateTotalPrice(form.quantity, form.nomenclatureId);
+});
 
 onMounted(() => {
     Promise.all([getNomenclatures(), getSupplies()]).then(() => {
@@ -46,8 +47,7 @@ function addSupply() {
         nomenclature_id: form.nomenclatureId,
         supply_date: form.supplyDate,
         quantity: form.quantity,
-        unit: form.unit,
-        price: form.price
+        unit: form.unit
     }).then((response) => {
         updateTable(response.data.status);
     }).catch(error => {
@@ -94,6 +94,28 @@ function editSupply(supply) {
     form.price = supply.price;
     
 }
+
+function calculateTotalPrice(quantity, nomenclatureId) {
+    return quantity * (nomenclatures.value.find(n => n.id === nomenclatureId)?.price_per_unit || 0);
+}
+
+function cancelEdit() {
+    if (confirm('Вы уверены, что хотите отменить редактирование? Несохраненные изменения будут потеряны.')) {
+        isEdit.value = false;
+        isEditId.value = 0;
+        resetForm();
+    }
+}
+
+function isWholeNumber(unit) {
+    return unit === 'шт.';
+}
+
+function validateQuantity(nomenclature) {
+    if (isWholeNumber(nomenclature.unit)) {
+        nomenclature.quantity = Math.floor(nomenclature.quantity);
+    }
+}
 </script>
 
 <template>
@@ -139,8 +161,8 @@ function editSupply(supply) {
                         </div>
 
                         <div class="mb-4">
-                            <label for="price" class="block text-sm font-medium text-gray-700">Цена ₽</label>
-                            <input type="number" id="price" v-model="form.price" step="0.01" required
+                            <label for="totalPrice" class="block text-sm font-medium text-gray-700">Общая цена</label>
+                            <input type="text" id="totalPrice" :value="totalPrice" readonly
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
 

@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Validator;
 use App\Models\Products;
 use App\Models\Nomenclatures;
+use App\Models\Products_Nomenclature;
+use Inertia\Inertia;
 
 class ProductsNomenclatureController extends Controller
 {
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
             'nomenclatures' => 'required|array',
             'nomenclatures.*.id' => 'required|exists:nomenclatures,id',
@@ -19,16 +22,22 @@ class ProductsNomenclatureController extends Controller
             'nomenclatures.*.price' => 'required|numeric|min:0',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         $product = Products::findOrFail($request->product_id);
 
         foreach ($request->nomenclatures as $nomenclature) {
-            $product->nomenclatures()->attach($nomenclature['id'], [
-                'quantity' => $nomenclature['quantity'],
-                'price' => $nomenclature['price'],
-            ]);
+            if ($nomenclature['id'] && $nomenclature['quantity'] > 0) {
+                $product->nomenclatures()->attach($nomenclature['id'], [
+                    'quantity' => $nomenclature['quantity'],
+                    'price' => $nomenclature['price'],
+                ]);
+            }
         }
 
-        return Response::json(['status' => 'Данные добавлены'], 200);
+        return response()->json(['status' => 'Данные добавлены'], 200);
     }
 
     public function getProductsNomenclatures()
@@ -52,15 +61,55 @@ class ProductsNomenclatureController extends Controller
 
     public function getAvailableNomenclatures(Request $request)
     {
-        $productId = $request->query('product_id');
-        $product = Products::findOrFail($productId);
-        
-        $availableNomenclatures = Nomenclatures::whereNotIn('id', function($query) use ($productId) {
-            $query->select('nomenclature_id')
-                  ->from('products__nomenclatures')
-                  ->where('product_id', $productId);
-        })->get();
+        // Получаем все номенклатуры без фильтрации
+        $availableNomenclatures = Nomenclatures::all();
 
         return Response::json(['nomenclatures' => $availableNomenclatures], 200);
+    }
+
+    public function index()
+    {
+        $productsNomenclatures = Products_Nomenclature::with(['product', 'nomenclature'])->get();
+        
+        $formattedData = $productsNomenclatures->groupBy('product_id')->map(function ($group) {
+            $product = $group->first()->product;
+            $nomenclatures = $group->map(function ($item) {
+                return [
+                    'id' => $item->nomenclature->id,
+                    'name' => $item->nomenclature->name,
+                    'pivot' => [
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                    ],
+                ];
+            });
+            
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'nomenclatures' => $nomenclatures,
+            ];
+        })->values();
+
+        return Inertia::render('ProductsNomenclatures', [
+            'productsNomenclatures' => $formattedData
+        ]);
+    }
+
+    public function delete(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'nomenclature_id' => 'required|exists:nomenclatures,id',
+        ]);
+
+        $product = Products::findOrFail($request->product_id);
+        $deleted = $product->nomenclatures()->detach($request->nomenclature_id);
+
+        if ($deleted) {
+            return Response::json(['status' => 'Связь успешно удалена'], 200);
+        } else {
+            return Response::json(['status' => 'Не удалось удалить связь'], 400);
+        }
     }
 }

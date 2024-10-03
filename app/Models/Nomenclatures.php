@@ -9,7 +9,7 @@ class Nomenclatures extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['name', 'supplier_id'];
+    protected $fillable = ['name', 'supplier_id', 'price_per_unit', 'total_quantity', 'total_price'];
 
     public function supplier()
     {
@@ -19,7 +19,6 @@ class Nomenclatures extends Model
     public function products()
     {
         return $this->belongsToMany(Products::class, 'products__nomenclatures', 'nomenclature_id', 'product_id')
-            ->withPivot('quantity', 'price')
-            ->withTimestamps();
+                ->withPivot('quantity', 'price');
     }
 }
