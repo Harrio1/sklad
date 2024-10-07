@@ -82,7 +82,7 @@ Route::middleware([
 
     Route::get('/get-products', [ProductsController::class, 'getProducts'])->name('products.index');
     Route::post('/add-product', [ProductsController::class, 'store'])->name('products.store');
-    Route::put('/update-product/{id}', [ProductsController::class, 'update'])->name('products.update');
+    Route::post('/update-product/{id}', [ProductsController::class, 'update'])->name('products.update');
     Route::delete('/delete-product/{id}', [ProductsController::class, 'delete'])->name('products.delete');
     Route::get('/get-product-details/{id}', [ProductsController::class, 'getProductDetails'])->name('products.details');
     Route::get('/get-available-nomenclatures', [ProductsNomenclatureController::class, 'getAvailableNomenclatures'])->name('get-available-nomenclatures');
