@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Products;
 use App\Models\Nomenclatures;
 use App\Models\Products_Nomenclature;
+use App\Models\Supplies;
 use Inertia\Inertia;
 
 class ProductsNomenclatureController extends Controller
@@ -18,7 +19,20 @@ class ProductsNomenclatureController extends Controller
             'product_id' => 'required|exists:products,id',
             'nomenclatures' => 'required|array',
             'nomenclatures.*.id' => 'required|exists:nomenclatures,id',
-            'nomenclatures.*.quantity' => 'required|numeric|min:0',
+            'nomenclatures.*.quantity' => [
+                'required',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    $index = explode('.', $attribute)[1];
+                    $nomenclatureId = $request->input("nomenclatures.{$index}.id");
+                    $unit = Supplies::where('nomenclature_id', $nomenclatureId)->value('unit');
+                    
+                    if ($unit === 'шт.' && !is_int($value)) {
+                        $fail('Количество должно быть целым числом для единицы измерения "шт."');
+                    }
+                },
+            ],
             'nomenclatures.*.price' => 'required|numeric|min:0',
         ]);
 
@@ -65,10 +79,12 @@ class ProductsNomenclatureController extends Controller
         return Response::json(['status' => 'Связь успешно удалена'], 200);
     }
 
-    public function getAvailableNomenclatures(Request $request)
+    public function getAvailableNomenclatures()
     {
-        // Получаем все номенклатуры без фильтрации
-        $availableNomenclatures = Nomenclatures::all();
+        $availableNomenclatures = Nomenclatures::select('nomenclatures.id', 'nomenclatures.name', 'supplies.unit', 'nomenclatures.price_per_unit')
+            ->join('supplies', 'nomenclatures.id', '=', 'supplies.nomenclature_id')
+            ->distinct()
+            ->get();
 
         return Response::json(['nomenclatures' => $availableNomenclatures], 200);
     }

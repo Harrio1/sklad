@@ -7,7 +7,7 @@ const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('con
 
 const form = reactive({
     product_id: null,
-    nomenclatures: [{ id: null, quantity: 0, price: 0 }]
+    nomenclatures: [{ id: null, quantity: 0, price: 0, unit: '' }]
 });
 
 const isOpenModal = ref(false);
@@ -37,7 +37,7 @@ onMounted(() => {
 
 function addNomenclatureLine() {
     if (canAddNomenclatureLine.value) {
-        form.nomenclatures.push({ id: null, quantity: 0, price: 0 });
+        form.nomenclatures.push({ id: null, quantity: 0, price: 0, unit: '' });
     }
 }
 
@@ -87,9 +87,9 @@ function loadAvailableNomenclatures() {
 watch(() => form.product_id, (newValue) => {
     if (newValue) {
         loadAvailableNomenclatures();
-        form.nomenclatures = [{ id: null, quantity: 0, price: 0 }];
+        form.nomenclatures = [{ id: null, quantity: 0, price: 0, unit: '' }];
     } else {
-        form.nomenclatures = [{ id: null, quantity: 0, price: 0 }];
+        form.nomenclatures = [{ id: null, quantity: 0, price: 0, unit: '' }];
     }
 });
 
@@ -106,9 +106,10 @@ function calculateTotalPrice(nomenclature) {
     return (nomenclature.pivot.price * nomenclature.pivot.quantity).toFixed(2);
 }
 
-function calculatePrice(nomenclature) {
+function updateNomenclatureDetails(nomenclature) {
     const selectedNomenclature = availableNomenclatures.value.find(n => n.id === nomenclature.id);
     if (selectedNomenclature) {
+        nomenclature.unit = selectedNomenclature.unit;
         nomenclature.price = selectedNomenclature.price_per_unit * nomenclature.quantity;
     }
 }
@@ -146,7 +147,7 @@ function calculatePrice(nomenclature) {
                                 <label :for="'nomenclature-' + index" class="block text-sm font-medium text-gray-700">Номенклатура</label>
                                 <select :id="'nomenclature-' + index" 
                                         v-model="nomenclature.id"
-                                        @change="calculatePrice(nomenclature)"
+                                        @change="updateNomenclatureDetails(nomenclature)"
                                         required
                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
                                     <option :value="null">Выберите номенклатуру</option>
@@ -160,10 +161,12 @@ function calculatePrice(nomenclature) {
                             </div>
                             <div class="w-1/4">
                                 <label :for="'quantity-' + index" class="block text-sm font-medium text-gray-700">Количество</label>
-                                <input type="number" :id="'quantity-' + index" 
+                                <input :type="nomenclature.unit === 'шт.' ? 'number' : 'text'" 
+                                       :id="'quantity-' + index" 
                                        v-model.number="nomenclature.quantity"
-                                       @input="calculatePrice(nomenclature)"
-                                       required min="0" step="0.01"
+                                       @input="updateNomenclatureDetails(nomenclature)"
+                                       required 
+                                       :step="nomenclature.unit === 'шт.' ? 1 : 0.01"
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                             </div>
                             <div class="w-1/4">

@@ -111,9 +111,9 @@ function isWholeNumber(unit) {
     return unit === 'шт.';
 }
 
-function validateQuantity(nomenclature) {
-    if (isWholeNumber(nomenclature.unit)) {
-        nomenclature.quantity = Math.floor(nomenclature.quantity);
+function validateQuantity(form) {
+    if (isWholeNumber(form.unit)) {
+        form.quantity = Math.floor(form.quantity);
     }
 }
 </script>
@@ -147,17 +147,21 @@ function validateQuantity(nomenclature) {
                         </div>
 
                         <div class="mb-4">
-                            <label for="quantity" class="block text-sm font-medium text-gray-700">Количество</label>
-                            <input type="number" id="quantity" v-model="form.quantity" step="0.01" required
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
-                        </div>
-
-                        <div class="mb-4">
                             <label for="unit" class="block text-sm font-medium text-gray-700">Единица измерения</label>
                             <select id="unit" v-model="form.unit" required
+                                    @change="validateQuantity(form)"
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
                                 <option v-for="unit in units" :key="unit" :value="unit">{{ unit }}</option>
                             </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="quantity" class="block text-sm font-medium text-gray-700">Количество</label>
+                            <input type="number" id="quantity" v-model="form.quantity" 
+                                   :step="isWholeNumber(form.unit) ? 1 : 0.01"
+                                   @input="validateQuantity(form)"
+                                   required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
 
                         <div class="mb-4">
