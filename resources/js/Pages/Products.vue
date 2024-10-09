@@ -153,67 +153,34 @@ function validateForm() {
 }
 
 function submitForm() {
-    
     if (validateForm()) {
-        if (isEdit.value) {
-            axios({
-                method: 'post',
-                url: '/update-product/'+isEditId.value,
-                data: {
-                    csrf: csrf,
-                    name: form.name,
-                    markup: form.markup
-                }
-            }).then((response) => {
-                if (response.data.status) {
+        const url = isEdit.value ? route('products.update', isEditId.value) : route('products.store');
+        const data = {
+            name: form.name,
+            markup: form.markup
+        };
+
+        axios.post(url, data)
+            .then(response => {
+                if (response.data.flash?.message) {
                     isOpenModal.value = true;
-                    messageResponse.value = response.data.status;
+                    messageResponse.value = response.data.flash.message;
                     messageResponseColor.value = 'mgreen';
                     setTimeout(closemessageResponse, 2000);
                 }
                 form.reset();
-                isEdit.value = false;
-                isEditId.value = 0;
+                if (isEdit.value) {
+                    isEdit.value = false;
+                    isEditId.value = 0;
+                }
                 getProducts();
             })
-
-
-            // form.post(route('products.update', isEditId.value), {
-            //     preserveScroll: true,
-            //     onSuccess: (response) => {
-            //         if (response?.props?.status) {
-            //             isOpenModal.value = true;
-            //             messageResponse.value = response.props.status;
-            //             messageResponseColor.value = 'mgreen';
-            //             setTimeout(closemessageResponse, 2000);
-            //         }
-            //         form.reset();
-            //         isEdit.value = false;
-            //         isEditId.value = 0;
-            //         getProducts();
-            //     },
-            //     onError: (errors) => {
-            //         console.error(errors);
-            //     }
-            // });
-        } else {
-            form.post(route('products.store'), {
-                preserveScroll: true,
-                onSuccess: (response) => {
-                    if (response?.props?.flash?.message) {
-                        isOpenModal.value = true;
-                        messageResponse.value = response.props.flash.message;
-                        messageResponseColor.value = 'mgreen';
-                        setTimeout(closemessageResponse, 2000);
-                    }
-                    form.reset();
-                    getProducts();
-                },
-                onError: (errors) => {
-                    console.error(errors);
+            .catch(error => {
+                console.error(error);
+                if (error.response?.data?.errors) {
+                    errors.value = error.response.data.errors;
                 }
             });
-        }
     }
 }
 

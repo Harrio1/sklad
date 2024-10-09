@@ -30,12 +30,18 @@ class ProductsNomenclatureController extends Controller
 
         foreach ($request->nomenclatures as $nomenclature) {
             if ($nomenclature['id'] && $nomenclature['quantity'] > 0) {
+                // Здесь мы сохраняем цену за единицу, а не общую цену
+                $pricePerUnit = $nomenclature['price'] / $nomenclature['quantity'];
+                
                 $product->nomenclatures()->attach($nomenclature['id'], [
                     'quantity' => $nomenclature['quantity'],
-                    'price' => $nomenclature['price'],
+                    'price' => $pricePerUnit, // Сохраняем цену за единицу
                 ]);
             }
         }
+
+        // Пересчитываем себестоимость и общую цену продукта
+        $product->setCostPrice()->setTotalPrice()->save();
 
         return response()->json(['status' => 'Данные добавлены'], 200);
     }
@@ -107,6 +113,8 @@ class ProductsNomenclatureController extends Controller
         $deleted = $product->nomenclatures()->detach($request->nomenclature_id);
 
         if ($deleted) {
+            // Пересчитываем себестоимость и общую цену продукта
+            $product->setCostPrice()->setTotalPrice()->save();
             return Response::json(['status' => 'Связь успешно удалена'], 200);
         } else {
             return Response::json(['status' => 'Не удалось удалить связь'], 400);

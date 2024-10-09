@@ -41,7 +41,10 @@ class Products extends Model
 
     public function setCostPrice()
     {
-        $this->price = $this->calculateCostPrice();
+        $totalCost = $this->nomenclatures->sum(function ($nomenclature) {
+            return $nomenclature->pivot->price * $nomenclature->pivot->quantity;
+        });
+        $this->price = $totalCost;
         return $this;
     }
 

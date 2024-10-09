@@ -103,7 +103,7 @@ function isNomenclatureAvailable(nomenclatureId, currentIndex) {
 
 // Добавим новую функцию для расчета общей цены
 function calculateTotalPrice(nomenclature) {
-    return nomenclature.price_per_unit * nomenclature.pivot.quantity;
+    return (nomenclature.pivot.price * nomenclature.pivot.quantity).toFixed(2);
 }
 
 function calculatePrice(nomenclature) {
@@ -230,7 +230,9 @@ function calculatePrice(nomenclature) {
                                             <div class="text-sm text-gray-900">{{ nomenclature.pivot.quantity }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ nomenclature.pivot.price }}</div>
+                                            <div class="text-sm text-gray-900"> 
+                                                {{ calculateTotalPrice(nomenclature) }}
+                                            </div> 
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <a @click="deleteProductNomenclature(product.id, nomenclature.id)" class="text-red-600 hover:text-red-900 cursor-pointer">

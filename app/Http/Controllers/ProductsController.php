@@ -68,12 +68,11 @@ class ProductsController extends Controller
         $product->markup = $request->markup;
         $product->save();
 
-        // return Inertia::render('Products', [
-        //     'flash' => [
-        //         'message' => 'Продукт успешно обновлен',
-        //     ],
-        // ]);
-        return Response::json(['status' => 'Продукт успешно обновлен'], 200);
+        return Inertia::render('Products', [
+            'flash' => [
+                'message' => 'Продукт успешно обновлен',
+            ],
+        ]);
     }
 
     public function delete($id)
