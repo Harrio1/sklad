@@ -111,8 +111,19 @@ function updateNomenclatureDetails(nomenclature) {
     if (selectedNomenclature) {
         nomenclature.unit = selectedNomenclature.unit;
         nomenclature.price = selectedNomenclature.price_per_unit * nomenclature.quantity;
+        
+        // Округляем количество до целого числа, если единица измерения - "шт."
+        if (nomenclature.unit === 'шт.') {
+            nomenclature.quantity = Math.round(nomenclature.quantity);
+        }
     }
 }
+
+// Добавляем новую функцию для определения шага ввода количества
+function getQuantityStep(unit) {
+    return unit === 'шт.' ? 1 : 0.01;
+}
+
 </script>
 
 <template>
@@ -161,12 +172,12 @@ function updateNomenclatureDetails(nomenclature) {
                             </div>
                             <div class="w-1/4">
                                 <label :for="'quantity-' + index" class="block text-sm font-medium text-gray-700">Количество</label>
-                                <input :type="nomenclature.unit === 'шт.' ? 'number' : 'text'" 
+                                <input type="number" 
                                        :id="'quantity-' + index" 
                                        v-model.number="nomenclature.quantity"
                                        @input="updateNomenclatureDetails(nomenclature)"
                                        required 
-                                       :step="nomenclature.unit === 'шт.' ? 1 : 0.01"
+                                       :step="getQuantityStep(nomenclature.unit)"
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                             </div>
                             <div class="w-1/4">

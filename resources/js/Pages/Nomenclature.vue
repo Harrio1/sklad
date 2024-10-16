@@ -1,14 +1,33 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, watch } from 'vue';
 import axios from 'axios';
 
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+const units = ['шт.', 'кг.', 'л.']; // Массив единиц измерения
 
 const form = reactive({
     name: null,
     suppliers_id: null,
     price_per_unit: null,
+    unit_of_measurement: null, // Добавляем поле для единицы измерения
+});
+
+// Добавляем новую переменную для отслеживания шага ввода цены
+const priceStep = ref(1);
+
+// Следим за изменением единицы измерения
+watch(() => form.unit_of_measurement, (newValue) => {
+    if (newValue === 'шт.') {
+        priceStep.value = 1;
+        // Округляем текущее значение до целого числа
+        if (form.price_per_unit) {
+            form.price_per_unit = Math.round(form.price_per_unit);
+        }
+    } else {
+        priceStep.value = 0.01;
+    }
 });
 
 let isOpenModal = ref(false);
@@ -68,10 +87,16 @@ function updateTable(mes) {
     form.name = '';
     form.suppliers_id = '';
     form.price_per_unit = '';
+    form.unit_of_measurement = '';
     setTimeout(closemessageResponse, 2000);
 }
 
 function responseNomenclature() {
+    // Перед отправкой данных, убедимся, что цена соответствует выбранной единице измерения
+    if (form.unit_of_measurement === 'шт.') {
+        form.price_per_unit = Math.round(form.price_per_unit);
+    }
+
     axios({
         method: 'post',
         url: '/add-nomenclature',
@@ -80,6 +105,7 @@ function responseNomenclature() {
             name: form.name,
             supplier_id: form.suppliers_id,
             price_per_unit: form.price_per_unit,
+            unit_of_measurement: form.unit_of_measurement, // Добавляем поле в отправляемые данные
         },
     }).then((response) => {
         updateTable(response.data.status);
@@ -120,10 +146,22 @@ function responseNomenclature() {
                         </div>
 
                         <div class="mb-4">
+                            <label for="unit_of_measurement" class="block text-sm font-medium text-gray-700">Единица измерения</label>
+                            <select id="unit_of_measurement" v-model="form.unit_of_measurement" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                                <option v-for="unit in units" :key="unit" :value="unit">
+                                    {{ unit }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
                             <label for="price_per_unit" class="block text-sm font-medium text-gray-700">Цена за единицу</label>
-                            <input type="number" id="price_per_unit" v-model="form.price_per_unit" step="0.01" required
+                            <input type="number" id="price_per_unit" v-model="form.price_per_unit" 
+                                   :step="priceStep" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
+
 
                         <button type="submit" @click.prevent="responseNomenclature"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -143,6 +181,9 @@ function responseNomenclature() {
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Поставщик
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Единица измерения
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Цена за единицу
@@ -167,6 +208,9 @@ function responseNomenclature() {
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ item.supplier.name }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.unit_of_measurement }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ item.price_per_unit }}</div>

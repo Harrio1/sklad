@@ -9,7 +9,14 @@ class Nomenclatures extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['name', 'supplier_id', 'price_per_unit', 'total_quantity', 'total_price'];
+    protected $fillable = [
+        'name', 
+        'supplier_id', 
+        'price_per_unit', 
+        'total_quantity', 
+        'total_price',
+        'unit_of_measurement' // Добавляем новое поле
+    ];
 
     public function supplier()
     {

@@ -14,6 +14,7 @@ class NomenclaturesController extends Controller
             'name' => ['required', 'max:50'],
             'supplier_id' => ['required', 'integer'],
             'price_per_unit' => ['required', 'numeric', 'min:0'],
+            'unit_of_measurement' => ['required', 'in:шт.,кг.,л.'], // Новое правило валидации
         ]);
 
         $nomenclature = new Nomenclatures;
@@ -21,6 +22,7 @@ class NomenclaturesController extends Controller
         $nomenclature->name = $request->name;
         $nomenclature->supplier_id = $request->supplier_id;
         $nomenclature->price_per_unit = $request->price_per_unit;
+        $nomenclature->unit_of_measurement = $request->unit_of_measurement; // Новое поле
         $nomenclature->total_quantity = 0;
         $nomenclature->total_price = 0;
 
