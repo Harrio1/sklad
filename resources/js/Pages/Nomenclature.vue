@@ -35,8 +35,27 @@ let messageResponse = ref('');
 const suppliers = ref([]);
 const isLoading = ref(true); // Добавляем состояние загрузки
 
+let messageResponseColor = ref(''); // Добавляем переменную для цвета сообщения
+
+function openModal(message, color) {
+    messageResponse.value = message;
+    messageResponseColor.value = color;
+    isOpenModal.value = true;
+    setTimeout(() => {
+        document.querySelector('.modalMessage').classList.add('show');
+    }, 10);
+
+    // Закрыть модальное окно через 2 секунды
+    setTimeout(closemessageResponse, 3000);
+}
+
 function closemessageResponse() {
-    isOpenModal.value = false;
+    document.querySelector('.modalMessage').classList.remove('show');
+    setTimeout(() => {
+        isOpenModal.value = false;
+        messageResponse.value = '';
+        messageResponseColor.value = '';
+    }, 500);
 }
 
 const nomenclature = reactive({});
@@ -72,23 +91,19 @@ function deleteNomenclature(ids) {
         axios.post('/delete-nomenclature', {
             nomenclature_id: ids,
         }).then((response) => {
-            isOpenModal.value = true;
-            messageResponse.value = response.data.status;
+            openModal(response.data.status, 'mgreen');
             getNomenclature();
-            setTimeout(closemessageResponse, 2000);
         });
     }
 }
 
 function updateTable(mes) {
-    isOpenModal.value = true;
-    messageResponse.value = mes;
+    openModal(mes, 'mgreen');
     getNomenclature();
     form.name = '';
     form.suppliers_id = '';
     form.price_per_unit = '';
     form.unit_of_measurement = '';
-    setTimeout(closemessageResponse, 2000);
 }
 
 function responseNomenclature() {
@@ -115,7 +130,7 @@ function responseNomenclature() {
 
 <template>
     <AppLayout title="Nomenclature">
-        <div class="modalMessage" v-if="isOpenModal">{{ messageResponse }}</div>
+        <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Номенклатура
@@ -156,7 +171,7 @@ function responseNomenclature() {
                         </div>
 
                         <div class="mb-4">
-                            <label for="price_per_unit" class="block text-sm font-medium text-gray-700">Цена за единицу</label>
+                            <label for="price_per_unit" class="block text-sm font-medium text-gray-700">Цена за единицу (₽)</label>
                             <input type="number" id="price_per_unit" v-model="form.price_per_unit" 
                                    :step="priceStep" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
@@ -186,13 +201,13 @@ function responseNomenclature() {
                                         Единица измерения
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Цена за единицу
+                                        Цена за единицу (₽)
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Общее количество
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Общая цена
+                                        Общая цена (₽)
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Действие
@@ -237,19 +252,32 @@ function responseNomenclature() {
     </AppLayout>
 </template>
 
-<style>
+<style scoped>
 .modalMessage {
     position: fixed;
     top: 10%;
+    right: -100%; /* Начальная позиция за пределами экрана */
     border: 1px solid #ccc;
     box-shadow: 0px 0px 20px #444;
-    background-color: rgb(0, 95, 13);
+    background-color: rgba(0, 95, 13, 0.9); /* Более мягкий цвет */
     padding: 20px 40px;
-    color: #ccc;
+    color: #fff;
+    transition: right 0.5s ease; /* Анимация появления */
+    z-index: 1000;
 }
-a {
-    cursor: pointer;
+
+.modalMessage.show {
+    right: 0%; /* Конечная позиция на экране */
 }
+
+.mgreen {
+    background-color: rgba(0, 95, 13, 0.9);
+}
+
+.mred {
+    background-color: rgba(104, 2, 10, 0.9);
+}
+
 .preloader {
     position: fixed;
     top: 0;
@@ -263,6 +291,7 @@ a {
     z-index: 9999;
     backdrop-filter: blur(5px);
 }
+
 .loader {
     border: 16px solid #f3f3f3;
     border-radius: 50%;
@@ -271,6 +300,7 @@ a {
     height: 120px;
     animation: spin 2s linear infinite;
 }
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }

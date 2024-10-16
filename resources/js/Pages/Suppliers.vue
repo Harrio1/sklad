@@ -1,156 +1,121 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { ref, reactive } from 'vue';
+import axios from 'axios';
 
-import { ref, reactive } from 'vue'
-//import { useForm } from '@inertiajs/vue3'
-import axios from 'axios'
-
-
-let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 const form = reactive({
     supplierName: null,
     address: null,
     supplierComments: null,
     phoneNumber: null
-})
+});
 
-// если редактируем
 let isEdit = ref(false);
 let isEditId = ref(0);
-// открыто ли модальное окно 
 let isOpenModal = ref(false);
-// сообщение от сервера
 let messageResponse = ref('');
 let messageResponseColor = ref('');
-// загруженны ли данные с сервера
 let isLoaded = ref(false);
 
-function closemessageResponse(){
-    isOpenModal.value = false;
-    messageResponse.value = '';
-    messageResponseColor.value = '';
+function closemessageResponse() {
+    document.querySelector('.modalMessage').classList.remove('show');
+    setTimeout(() => {
+        isOpenModal.value = false;
+        messageResponse.value = '';
+        messageResponseColor.value = '';
+    }, 500);
 }
 
-const suppliers = reactive({})
-function  getSuppliers(){
-    axios({
-            method: 'get',
-            url: '/get-suppliers',
-        }).then((response) => {
-            suppliers.value = response.data.suppliers;
-            isLoaded.value = true;
-    })
+const suppliers = reactive({});
+function getSuppliers() {
+    axios.get('/get-suppliers').then((response) => {
+        suppliers.value = response.data.suppliers;
+        isLoaded.value = true;
+    });
 }
 getSuppliers();
 
-
-function deleteSuppliers(ids){
-
-    let a = confirm('Вы действительно хотите удалить запись?');
-    if (a == true) {
-        axios.post('/delete-suppliers', {
-            suppliers_id: ids
-        }
-        ).then((response) => {
-            isOpenModal.value = true;
-            messageResponse.value = response.data.status
+function deleteSuppliers(ids) {
+    if (confirm('Вы действительно хотите удалить запись?')) {
+        axios.post('/delete-suppliers', { suppliers_id: ids }).then((response) => {
+            openModal(response.data.status, 'mgreen');
             getSuppliers();
-            setTimeout(closemessageResponse, 2000);
-        })
+        });
     }
-
 }
 
-function updateSuppliers(ids){
+function updateSuppliers(ids) {
     let b = suppliers.value.find((el) => el.id == ids);
     form.supplierName = b.name;
     form.supplierComments = b.comments;
     form.address = b.address;
     form.phoneNumber = b.phone;
-    isEdit = true;
-    isEditId = ids;
+    isEdit.value = true;
+    isEditId.value = ids;
 }
 
-function clearSuppliers(){
+function clearSuppliers() {
     form.supplierName = '';
     form.supplierComments = '';
     form.address = '';
     form.phoneNumber = null;
 }
 
-function updateTable(mes, isok){
-    isEdit = false;
-    isEditId = 0;
+function openModal(message, color) {
+    messageResponse.value = message;
+    messageResponseColor.value = color;
     isOpenModal.value = true;
-    messageResponse.value = mes;
-    if (isok) {
-        messageResponseColor.value = 'mgreen';
-    } else {
-        messageResponseColor.value = 'mred';
-    }
-    
-    getSuppliers();
-    setTimeout(closemessageResponse, 2000);
+    setTimeout(() => {
+        document.querySelector('.modalMessage').classList.add('show');
+    }, 10);
+
+    // Закрыть модальное окно через 2 секунды
+    setTimeout(closemessageResponse, 3000);
 }
 
-
 function responseSuppliers() {
-    axios({
-            method: 'post',
-            url: '/add-suppliers',
-            data: {
-                csrf: csrf,
-                supplierName: form.supplierName,
-                address: form.address,
-                supplierComments: form.supplierComments,
-                phoneNumber: form.phoneNumber
+    axios.post('/add-suppliers', {
+        csrf: csrf,
+        supplierName: form.supplierName,
+        address: form.address,
+        supplierComments: form.supplierComments,
+        phoneNumber: form.phoneNumber
+    }).then((response) => {
+        if (response.data.isOk) {
+            clearSuppliers();
+            openModal(response.data.status, 'mgreen');
+            getSuppliers();
+        } else {
+            openModal(response.data.status, 'mred');
         }
-        }).then((response) => {
-            if (response.data.isOk){
-                clearSuppliers() 
-                updateTable(response.data.status, response.data.isOk)
-            } else {
-                isOpenModal.value = true;
-                messageResponse.value = response.data.status;
-                messageResponseColor.value = 'mred';
-                setTimeout(closemessageResponse, 2000);
-            }
-            
-        })
+    });
 }
 
 function updateSuppliersToServ() {
-    axios({
-            method: 'post',
-            url: '/update-suppliers',
-            data: {
-                csrf: csrf,
-                supplierId: isEditId,
-                supplierName: form.supplierName,
-                address: form.address,
-                supplierComments: form.supplierComments,
-                phoneNumber: form.phoneNumber
+    axios.post('/update-suppliers', {
+        csrf: csrf,
+        supplierId: isEditId.value,
+        supplierName: form.supplierName,
+        address: form.address,
+        supplierComments: form.supplierComments,
+        phoneNumber: form.phoneNumber
+    }).then((response) => {
+        if (response.data.isOk) {
+            clearSuppliers();
+            openModal(response.data.status, 'mgreen');
+            getSuppliers();
+        } else {
+            openModal(response.data.status, 'mred');
         }
-        }).then((response) => {
-            if (response.data.isOk){
-                clearSuppliers() 
-                updateTable(response.data.status, response.data.isOk)
-            } else {
-                isOpenModal.value = true;
-                messageResponse.value = response.data.status;
-                messageResponseColor.value = 'mred';
-                setTimeout(closemessageResponse, 2000);
-            }
-           
-        })
+    });
 }
-
 </script>
 
 <template>
     <AppLayout title="Suppliers">
-        <div v-if = "!isLoaded"  class="preload">
+        <div v-if="!isLoaded" class="preload">
             <div class="preload2"></div>
         </div>
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
@@ -163,9 +128,6 @@ function updateSuppliersToServ() {
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
-                    
-                    
-                  
                     <h3 class="text-lg font-medium mb-4">Добавить нового поставщика</h3>
                     <form>
                         <input type="hidden" name="_token" :value="csrf">
@@ -187,15 +149,13 @@ function updateSuppliersToServ() {
                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500"></textarea>
                         </div>
 
-
                         <div class="mb-4">
                             <label for="supplierComments" class="block text-sm font-medium text-gray-700">Комментарий</label>
                             <input type="text" id="supplierComments" v-model="form.supplierComments" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
 
-                        
-                        <button v-if="!isEdit" type="submit" @click.prevent ="responseSuppliers()"
+                        <button v-if="!isEdit" type="submit" @click.prevent="responseSuppliers()"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить поставщика
                         </button>
@@ -203,81 +163,127 @@ function updateSuppliersToServ() {
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Изменить
                         </button>
-                        
                     </form>
-                    
-                    
-
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
                     <h3 class="text-lg font-medium mb-4">Список поставщиков</h3>
-                    
-
-
-
-<table v-if = "isLoaded" class="min-w-full divide-y divide-gray-200 overflow-x-auto">
-    <thead class="bg-gray-50">
-        <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Имя
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Адрес
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Номер телефона
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Комментарий
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Действия
-            </th>
-        </tr>
-    </thead>
-    
-        
- 
-    <tbody class="bg-white divide-y divide-gray-200">
-        <tr v-for="item in suppliers.value" :key="item.id">
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                        <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/150?img=1" alt="">
-                    </div>
-                    <div class="ml-4">
-                        <div class="text-sm font-medium text-gray-900">
-                            {{ item.name }}
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            jane.cooper@example.com
-                        </div>
-                    </div>
-                </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ item.address }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ item.phone }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ item.comments }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap  text-sm font-medium">
-                <a @click="updateSuppliers(item.id)" :data="item.id" class="text-indigo-600 hover:text-indigo-900">Редактировать</a>
-                <a @click="deleteSuppliers(item.id)" :data="item.id" class="ml-2 text-red-600 hover:text-red-900">Удалить</a>
-            </td>
-        </tr>
-        </tbody>
-        </table>   
-
+                    <table v-if="isLoaded" class="min-w-full divide-y divide-gray-200 overflow-x-auto">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Имя
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Адрес
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Номер телефона
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Комментарий
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Действия
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-for="item in suppliers.value" :key="item.id">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/150?img=1" alt="">
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ item.name }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                jane.cooper@example.com
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ item.address }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ item.phone }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ item.comments }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a @click="updateSuppliers(item.id)" class="text-indigo-600 hover:text-indigo-900">Редактировать</a>
+                                    <a @click="deleteSuppliers(item.id)" class="ml-2 text-red-600 hover:text-red-900">Удалить</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </AppLayout>
 </template>
-<style>
 
+<style scoped>
+.modalMessage {
+    position: fixed;
+    top: 10%;
+    right: -100%; /* Начальная позиция за пределами экрана */
+    border: 1px solid #ccc;
+    box-shadow: 0px 0px 20px #444;
+    background-color: rgba(0, 95, 13, 0.9); /* Более мягкий цвет */
+    padding: 20px 40px;
+    color: #fff;
+    transition: right 0.5s ease; /* Анимация появления */
+    z-index: 1000;
+}
+
+.modalMessage.show {
+    right: 0%; /* Конечная позиция на экране */
+}
+
+.mgreen {
+    background-color: rgba(0, 95, 13, 0.9);
+}
+
+.mred {
+    background-color: rgba(104, 2, 10, 0.9);
+}
+
+.preload {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+    background-color: #dddddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    left: 0;
+    top: 0;
+}
+
+.preload2 {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border-top: 5px solid #000;
+    border-radius: 50%;
+    animation: preload 1.5s ease 0s infinite;
+}
+
+.preload2::after {
+    content: '';
+    width: 60px;
+    height: 60px;
+    border-top: 5px solid #000;
+    border-radius: 50%;
+    position: absolute;
+    left: -10px;
+    top: -10px;
+    animation: preload 1.5s ease 0.5s infinite;
+}
 </style>

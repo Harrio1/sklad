@@ -25,10 +25,25 @@ let messageResponseColor = ref('');
 // загруженны ли данные с сервера
 let isLoaded = ref(false);
 
-function closemessageResponse(){
-    isOpenModal.value = false;
-    messageResponse.value = '';
-    messageResponseColor.value = '';
+function openModal(message, color) {
+    messageResponse.value = message;
+    messageResponseColor.value = color;
+    isOpenModal.value = true;
+    setTimeout(() => {
+        document.querySelector('.modalMessage').classList.add('show');
+    }, 10);
+
+    // Закрыть модальное окно через 2 секунды
+    setTimeout(closemessageResponse, 3000);
+}
+
+function closemessageResponse() {
+    document.querySelector('.modalMessage').classList.remove('show');
+    setTimeout(() => {
+        isOpenModal.value = false;
+        messageResponse.value = '';
+        messageResponseColor.value = '';
+    }, 500);
 }
 
 const products = reactive({})
@@ -81,11 +96,13 @@ function deleteProducts(ids){
     if (a == true) {
         axios.delete(route('products.delete', ids))
             .then(response => {
-                isOpenModal.value = true;
-                messageResponse.value = response.data.status
+                openModal(response.data.status, 'mgreen');
                 getProducts();
-                setTimeout(closemessageResponse, 2000);
             })
+            .catch(error => {
+                console.error('Ошибка при удалении продукта:', error);
+                openModal('Ошибка при удалении продукта', 'mred');
+            });
     }
 }
 
@@ -162,12 +179,7 @@ function submitForm() {
 
         axios.post(url, data)
             .then(response => {
-                if (response.data.flash?.message) {
-                    isOpenModal.value = true;
-                    messageResponse.value = response.data.flash.message;
-                    messageResponseColor.value = 'mgreen';
-                    setTimeout(closemessageResponse, 2000);
-                }
+                openModal(response.data.flash?.message || 'Успешно добавлено', 'mgreen');
                 form.reset();
                 if (isEdit.value) {
                     isEdit.value = false;
@@ -180,6 +192,7 @@ function submitForm() {
                 if (error.response?.data?.errors) {
                     errors.value = error.response.data.errors;
                 }
+                openModal('Ошибка при добавлении продукта', 'mred');
             });
     }
 }
@@ -265,13 +278,13 @@ const editingProduct = ref(null);
                 Название
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Наценка
+                Наценка (%)
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Себестоимость
+                Себестоимость (₽)
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Итоговая цена
+                Итоговая цена (₽)
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Действия
@@ -348,3 +361,30 @@ const editingProduct = ref(null);
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.modalMessage {
+    position: fixed;
+    top: 10%;
+    right: -100%; /* Начальная позиция за пределами экрана */
+    border: 1px solid #ccc;
+    box-shadow: 0px 0px 20px #444;
+    background-color: rgba(0, 95, 13, 0.9); /* Более мягкий цвет */
+    padding: 20px 40px;
+    color: #fff;
+    transition: right 0.5s ease; /* Анимация появления */
+    z-index: 1000;
+}
+
+.modalMessage.show {
+    right: 0%; /* Конечная позиция на экране */
+}
+
+.mgreen {
+    background-color: rgba(0, 95, 13, 0.9);
+}
+
+.mred {
+    background-color: rgba(104, 2, 10, 0.9);
+}
+</style>

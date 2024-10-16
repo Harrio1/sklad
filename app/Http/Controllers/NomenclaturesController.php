@@ -43,6 +43,10 @@ class NomenclaturesController extends Controller
         if (!$nomenclature) {
             return Response::json(['status' => 'Ошибка, элемент не найден'], 404);
         }
+
+        // Удаление связанных записей в таблице supplies
+        $nomenclature->supplies()->delete(); // Предполагается, что у вас есть связь supplies в модели Nomenclatures
+
         $nomenclature->delete();
         return Response::json(['status' => 'Номенклатура успешно удалена'], 200);
     }

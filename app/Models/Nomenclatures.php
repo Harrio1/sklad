@@ -15,7 +15,7 @@ class Nomenclatures extends Model
         'price_per_unit', 
         'total_quantity', 
         'total_price',
-        'unit_of_measurement' // Добавляем новое поле
+        'unit_of_measurement'
     ];
 
     public function supplier()
@@ -27,5 +27,11 @@ class Nomenclatures extends Model
     {
         return $this->belongsToMany(Products::class, 'products__nomenclatures', 'nomenclature_id', 'product_id')
                 ->withPivot('quantity', 'price');
+    }
+
+    // Добавьте этот метод для связи с Supplies
+    public function supplies()
+    {
+        return $this->hasMany(Supplies::class, 'nomenclature_id');
     }
 }

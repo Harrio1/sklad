@@ -221,6 +221,9 @@ const logout = () => {
                                 <ResponsiveNavLink :href="route('products')" :active="route().current('products')">
                                     Продукты
                                 </ResponsiveNavLink>
+                                <ResponsiveNavLink :href="route('products_nomenclatures')" :active="route().current('products_nomenclatures')">
+                                    Номенклатура продукта
+                                </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->

@@ -17,9 +17,33 @@ const productsNomenclatures = ref([]);
 const isLoading = ref(true);
 const availableNomenclatures = ref([]);
 const isLoadingNomenclatures = ref(false);
+let messageResponseColor = ref(''); // Добавляем переменную для цвета сообщения
+
+function openModal(message, color) {
+    messageResponse.value = message;
+    messageResponseColor.value = color;
+    isOpenModal.value = true;
+    setTimeout(() => {
+        const modalElement = document.querySelector('.modalMessage');
+        if (modalElement) {
+            modalElement.classList.add('show');
+        }
+    }, 10);
+
+    // Закрыть модальное окно через 2 секунды
+    setTimeout(closemessageResponse, 3000);
+}
 
 function closemessageResponse() {
-    isOpenModal.value = false;
+    const modalElement = document.querySelector('.modalMessage');
+    if (modalElement) {
+        modalElement.classList.remove('show');
+    }
+    setTimeout(() => {
+        isOpenModal.value = false;
+        messageResponse.value = '';
+        messageResponseColor.value = '';
+    }, 500);
 }
 
 function getProductsNomenclatures() {
@@ -51,10 +75,11 @@ function deleteProductNomenclature(productId, nomenclatureId) {
             product_id: productId,
             nomenclature_id: nomenclatureId,
         }).then((response) => {
-            isOpenModal.value = true;
-            messageResponse.value = response.data.status;
+            openModal(response.data.status, 'mgreen');
             getProductsNomenclatures();
-            setTimeout(closemessageResponse, 2000);
+        }).catch(error => {
+            console.error('Ошибка при удалении связи:', error);
+            openModal('Ошибка при удалении связи', 'mred');
         });
     }
 }
@@ -62,13 +87,14 @@ function deleteProductNomenclature(productId, nomenclatureId) {
 function submitForm() {
     axios.post('/add-products-nomenclatures', form)
         .then((response) => {
-            isOpenModal.value = true;
-            messageResponse.value = response.data.status;
+            openModal(response.data.status, 'mgreen');
             getProductsNomenclatures();
             form.product_id = null;
             form.nomenclatures = [];
             loadAvailableNomenclatures();
-            setTimeout(closemessageResponse, 2000);
+        }).catch(error => {
+            console.error('Ошибка при добавлении связи:', error);
+            openModal('Ошибка при добавлении связи', 'mred');
         });
 }
 
@@ -128,7 +154,7 @@ function getQuantityStep(unit) {
 
 <template>
     <AppLayout title="Продукты номенклатуры">
-        <div class="modalMessage" v-if="isOpenModal">{{ messageResponse }}</div>
+        <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Продукты номенклатуры
@@ -181,7 +207,7 @@ function getQuantityStep(unit) {
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                             </div>
                             <div class="w-1/4">
-                                <label :for="'price-' + index" class="block text-sm font-medium text-gray-700">Цена</label>
+                                <label :for="'price-' + index" class="block text-sm font-medium text-gray-700">Цена (₽)</label>
                                 <input type="number" :id="'price-' + index" 
                                        v-model.number="nomenclature.price"
                                        readonly
@@ -222,7 +248,7 @@ function getQuantityStep(unit) {
                                         Количество
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Цена
+                                        Цена (₽)
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Действие
@@ -271,12 +297,28 @@ function getQuantityStep(unit) {
 .modalMessage {
     position: fixed;
     top: 10%;
+    right: -100%; /* Начальная позиция за пределами экрана */
     border: 1px solid #ccc;
     box-shadow: 0px 0px 20px #444;
-    background-color: rgb(0, 95, 13);
+    background-color: rgba(0, 95, 13, 0.9); /* Более мягкий цвет */
     padding: 20px 40px;
-    color: #ccc;
+    color: #fff;
+    transition: right 0.5s ease; /* Анимация появления */
+    z-index: 1000;
 }
+
+.modalMessage.show {
+    right: 0%; /* Конечная позиция на экране */
+}
+
+.mgreen {
+    background-color: rgba(0, 95, 13, 0.9);
+}
+
+.mred {
+    background-color: rgba(104, 2, 10, 0.9);
+}
+
 .preloader {
     position: fixed;
     top: 0;

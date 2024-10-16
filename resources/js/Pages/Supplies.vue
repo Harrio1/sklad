@@ -1,6 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import axios from 'axios';
 
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -10,15 +10,13 @@ const form = reactive({
     nomenclatures: [{ id: null, quantity: 0, price: 0, unit: '' }]
 });
 
-const units = ['шт.', 'кг.', 'л.'];
-
 let isEdit = ref(false);
 let isEditId = ref(0);
 let isOpenModal = ref(false);
 let messageResponse = ref('');
 let nomenclatures = ref([]);
 let supplies = ref([]);
-const isLoading = ref(true); // Добавляем состояние загрузки
+const isLoading = ref(true);
 
 const totalPrice = computed(() => {
     return calculateTotalPrice(form.quantity, form.nomenclatureId);
@@ -26,7 +24,7 @@ const totalPrice = computed(() => {
 
 onMounted(() => {
     Promise.all([getNomenclatures(), getSupplies()]).then(() => {
-        isLoading.value = false; // Отключаем прелоадер после загрузки всех данных
+        isLoading.value = false;
     });
 });
 
@@ -72,11 +70,9 @@ function deleteSupply(id) {
 function updateTable(message) {
     isEdit.value = false;
     isEditId.value = 0;
-    isOpenModal.value = true;
-    messageResponse.value = message;
+    openModal(message, 'mgreen');
     getSupplies();
     resetForm();
-    setTimeout(() => isOpenModal.value = false, 2000);
 }
 
 function resetForm() {
@@ -92,23 +88,12 @@ function editSupply(supply) {
     form.quantity = supply.quantity;
     form.unit = supply.unit;
     form.price = supply.price;
-    
 }
 
 function calculateTotalPrice(quantity, nomenclatureId) {
-    return quantity * (nomenclatures.value.find(n => n.id === nomenclatureId)?.price_per_unit || 0);
-}
-
-function cancelEdit() {
-    if (confirm('Вы уверены, что хотите отменить редактирование? Несохраненные изменения будут потеряны.')) {
-        isEdit.value = false;
-        isEditId.value = 0;
-        resetForm();
-    }
-}
-
-function isWholeNumber(unit) {
-    return unit === 'шт.';
+    const nomenclature = nomenclatures.value.find(n => n.id === nomenclatureId);
+    const pricePerUnit = nomenclature ? nomenclature.price_per_unit : 0;
+    return (quantity || 0) * pricePerUnit;
 }
 
 function validateQuantity(form) {
@@ -116,11 +101,46 @@ function validateQuantity(form) {
         form.quantity = Math.floor(form.quantity);
     }
 }
+
+function updateNomenclatureDetails(nomenclatureId) {
+    const selectedNomenclature = nomenclatures.value.find(n => n.id === nomenclatureId);
+    if (selectedNomenclature) {
+        form.unit = selectedNomenclature.unit_of_measurement;
+        validateQuantity(form);
+    }
+}
+
+function isWholeNumber(unit) {
+    return unit === 'шт.';
+}
+
+let messageResponseColor = ref(''); // Добавляем переменную для цвета сообщения
+
+function openModal(message, color) {
+    messageResponse.value = message;
+    messageResponseColor.value = color;
+    isOpenModal.value = true;
+    setTimeout(() => {
+        document.querySelector('.modalMessage').classList.add('show');
+    }, 10);
+
+    // Закрыть модальное окно через 2 секунды
+    setTimeout(closemessageResponse, 3000);
+}
+
+function closemessageResponse() {
+    document.querySelector('.modalMessage').classList.remove('show');
+    setTimeout(() => {
+        isOpenModal.value = false;
+        messageResponse.value = '';
+        messageResponseColor.value = '';
+    }, 500);
+}
 </script>
 
 <template>
     <AppLayout title="Supplies">
-        <div class="modalMessage" v-if="isOpenModal">{{ messageResponse }}</div>
+        <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Поставки
@@ -131,10 +151,11 @@ function validateQuantity(form) {
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
                     <h3 class="text-lg font-medium mb-4">{{ isEdit ? 'Редактировать поставку' : 'Добавить новую поставку' }}</h3>
-                    <form @submit.prevent >
+                    <form @submit.prevent>
                         <div class="mb-4">
                             <label for="nomenclatureId" class="block text-sm font-medium text-gray-700">Номенклатура</label>
                             <select id="nomenclatureId" v-model="form.nomenclatureId" required
+                                    @change="updateNomenclatureDetails(form.nomenclatureId)"
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
                                 <option v-for="item in nomenclatures" :key="item.id" :value="item.id">{{ item.name }}</option>
                             </select>
@@ -144,15 +165,6 @@ function validateQuantity(form) {
                             <label for="supplyDate" class="block text-sm font-medium text-gray-700">Дата поставки</label>
                             <input type="date" id="supplyDate" v-model="form.supplyDate" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="unit" class="block text-sm font-medium text-gray-700">Единица измерения</label>
-                            <select id="unit" v-model="form.unit" required
-                                    @change="validateQuantity(form)"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
-                                <option v-for="unit in units" :key="unit" :value="unit">{{ unit }}</option>
-                            </select>
                         </div>
                         
                         <div class="mb-4">
@@ -165,15 +177,12 @@ function validateQuantity(form) {
                         </div>
 
                         <div class="mb-4">
-                            <label for="totalPrice" class="block text-sm font-medium text-gray-700">Общая цена</label>
-                            <input type="text" id="totalPrice" :value="totalPrice" readonly
+                            <label for="totalPrice" class="block text-sm font-medium text-gray-700">Общая цена (₽)</label>
+                            <input type="text" id="totalPrice" :value="totalPrice.toFixed(2)" readonly
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
 
-                       
-
-
-                        <button v-if="!isEdit" type="submit" @click.prevent =" addSupply()"
+                        <button v-if="!isEdit" type="submit" @click.prevent="addSupply()"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить поставку
                         </button>
@@ -222,12 +231,28 @@ function validateQuantity(form) {
 .modalMessage {
     position: fixed;
     top: 10%;
+    right: -100%; /* Начальная позиция за пределами экрана */
     border: 1px solid #ccc;
     box-shadow: 0px 0px 20px #444;
-    background-color: rgb(0, 95, 13);
+    background-color: rgba(0, 95, 13, 0.9); /* Более мягкий цвет */
     padding: 20px 40px;
-    color: #ccc;
+    color: #fff;
+    transition: right 0.5s ease; /* Анимация появления */
+    z-index: 1000;
 }
+
+.modalMessage.show {
+    right: 0%; /* Конечная позиция на экране */
+}
+
+.mgreen {
+    background-color: rgba(0, 95, 13, 0.9);
+}
+
+.mred {
+    background-color: rgba(104, 2, 10, 0.9);
+}
+
 .preloader {
     position: fixed;
     top: 0;
@@ -241,6 +266,7 @@ function validateQuantity(form) {
     z-index: 9999;
     backdrop-filter: blur(5px);
 }
+
 .loader {
     border: 16px solid #f3f3f3;
     border-radius: 50%;
@@ -249,6 +275,7 @@ function validateQuantity(form) {
     height: 120px;
     animation: spin 2s linear infinite;
 }
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }

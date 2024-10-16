@@ -57,21 +57,31 @@
     animation: preload 1.5s ease 0.5s infinite;
 }
 
-.modalMessage{
+.modalMessage {
     position: fixed;
     top: 10%;
+    right: -100%; /* Начальная позиция за пределами экрана */
     border: 1px solid #ccc;
     box-shadow: 0px 0px 20px #444;
-    background-color: rgb(0, 95, 13);
+    background-color: rgba(0, 95, 13, 0.9); /* Более мягкий цвет */
     padding: 20px 40px;
-    color: #ccc;
+    color: #fff;
+    transition: right 0.5s ease; /* Анимация появления */
+    z-index: 1000;
 }
+
+.modalMessage.show {
+    right: 0%; /* Конечная позиция на экране */
+}
+
 .mgreen {
-    background-color: rgb(0, 95, 13);
+    background-color: rgba(0, 95, 13, 0.9);
 }
+
 .mred {
-    background-color: rgb(104, 2, 10);
+    background-color: rgba(104, 2, 10, 0.9);
 }
+
 a {
     cursor: pointer;
 }
