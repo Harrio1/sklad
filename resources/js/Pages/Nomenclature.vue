@@ -137,9 +137,9 @@ function responseNomenclature() {
             </h2>
         </template>
 
-        <div class="py-12" v-if="!isLoading">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
+        <div class="py-6 sm:py-12" v-if="!isLoading">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mb-6">
                     <h3 class="text-lg font-medium mb-4">Добавить новую номенклатуру</h3>
                     <form>
                         <input type="hidden" name="_token" :value="csrf">
@@ -179,69 +179,96 @@ function responseNomenclature() {
 
 
                         <button type="submit" @click.prevent="responseNomenclature"
-                                class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                class="w-full sm:w-auto inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить номенклатуру
                         </button>
                     </form>
                 </div>
 
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
                     <h3 class="text-lg font-medium mb-4">Список номенклатуры</h3>
-                    <div class="overflow-x-auto">
+                    <!-- Таблица для десктопной версии -->
+                    <div class="hidden sm:block overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Имя
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Поставщик
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Единица измерения
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Ед. изм.
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Цена за единицу (₽)
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Цена (₽)
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Общее количество
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Кол-во
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Общая цена (₽)
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Сумма (₽)
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Действие
                                     </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="item in nomenclature.value" :key="item.id">
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-3 py-2 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">
                                             {{ item.name }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-3 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ item.supplier.name }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-3 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ item.unit_of_measurement }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-3 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ item.price_per_unit }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-3 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ item.total_quantity }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-3 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ item.total_price }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <a @click="deleteNomenclature(item.id)" :data="item.id" class="ml-2 text-red-600 hover:text-red-900">Delete</a>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
+                                        <a @click="deleteNomenclature(item.id)" :data="item.id" class="text-red-600 hover:text-red-900">Удалить</a>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <!-- Мобильное представление -->
+                    <div class="sm:hidden">
+                        <div v-for="item in nomenclature.value" :key="item.id" class="bg-white shadow overflow-hidden rounded-lg mb-4 p-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                {{ item.name }}
+                            </h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Поставщик: {{ item.supplier.name }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Ед. изм.: {{ item.unit_of_measurement }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Цена: {{ item.price_per_unit }} ₽
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Количество: {{ item.total_quantity }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Сумма: {{ item.total_price }} ₽
+                            </p>
+                            <div class="mt-2">
+                                <a @click="deleteNomenclature(item.id)" :data="item.id" class="text-red-600 hover:text-red-900">Удалить</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -304,5 +331,11 @@ function responseNomenclature() {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+    }
 }
 </style>

@@ -147,9 +147,9 @@ function closemessageResponse() {
             </h2>
         </template>
 
-        <div v-if="!isLoading" class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
+        <div v-if="!isLoading" class="py-6 sm:py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
                     <h3 class="text-lg font-medium mb-4">{{ isEdit ? 'Редактировать поставку' : 'Добавить новую поставку' }}</h3>
                     <form @submit.prevent>
                         <div class="mb-4">
@@ -193,31 +193,55 @@ function closemessageResponse() {
                     </form>
                 </div>
 
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5 mt-5">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mt-5">
                     <h3 class="text-lg font-medium mb-4">Список поставок</h3>
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Номенклатура</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Количество</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена (₽)</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="supply in supplies" :key="supply.id">
-                                <td class="px-6 py-4 whitespace-nowrap">{{ supply.nomenclature.name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ supply.supply_date }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ supply.quantity }} {{ supply.unit }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ supply.price }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a @click="editSupply(supply)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Редактировать</a>
-                                    <a @click="deleteSupply(supply.id)" class="ml-2 text-red-600 hover:text-red-900 cursor-pointer">Удалить</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- Таблица для десктопной версии -->
+                    <div class="hidden sm:block overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Номенклатура</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Количество</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена (₽)</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="supply in supplies" :key="supply.id">
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ supply.nomenclature.name }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ supply.supply_date }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ supply.quantity }} {{ supply.unit }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ supply.price }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
+                                        <a @click="editSupply(supply)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Ред.</a>
+                                        <a @click="deleteSupply(supply.id)" class="ml-2 text-red-600 hover:text-red-900 cursor-pointer">Удал.</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Мобильное представление -->
+                    <div class="sm:hidden">
+                        <div v-for="supply in supplies" :key="supply.id" class="bg-white shadow overflow-hidden sm:rounded-lg mb-4 p-4">
+                            <h4 class="text-lg leading-6 font-medium text-gray-900">
+                                {{ supply.nomenclature.name }}
+                            </h4>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Дата: {{ supply.supply_date }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Количество: {{ supply.quantity }} {{ supply.unit }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Цена: {{ supply.price }} ₽
+                            </p>
+                            <div class="mt-2">
+                                <a @click="editSupply(supply)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer mr-2">Редактировать</a>
+                                <a @click="deleteSupply(supply.id)" class="text-red-600 hover:text-red-900 cursor-pointer">Удалить</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -279,5 +303,11 @@ function closemessageResponse() {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+    }
 }
 </style>

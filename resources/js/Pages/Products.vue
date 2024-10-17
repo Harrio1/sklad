@@ -224,7 +224,7 @@ const editingProduct = ref(null);
 
 <template>
     <AppLayout title="Products">
-        <div v-if = "!isLoaded"  class="preload">
+        <div v-if="!isLoaded" class="preload">
             <div class="preload2"></div>
         </div>
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
@@ -234,13 +234,10 @@ const editingProduct = ref(null);
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
-                    
-                    
-                  
-                    <h3 class="text-lg font-medium mb-4">Добавить новый продукт</h3>
+        <div class="py-6 sm:py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mb-6">
+                    <h3 class="text-lg font-medium mb-4">{{ isEdit ? 'Редактировать продукт' : 'Добавить новый продукт' }}</h3>
                     <form @submit.prevent="submitForm">
                         <input type="hidden" name="_token" :value="csrf">
                         <div class="mb-4">
@@ -253,80 +250,82 @@ const editingProduct = ref(null);
                             <input type="number" id="markup" v-model="form.markup" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
                             <p v-if="errors.markup" class="mt-2 text-sm text-red-600">{{ errors.markup }}</p>
                         </div>
-                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <button type="submit" class="w-full sm:w-auto inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             {{ isEdit ? 'Обновить продукт' : 'Добавить продукт' }}
                         </button>
-                        <button v-if="isEdit" type="button" @click="cancelEdit" class="ml-2 inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <button v-if="isEdit" type="button" @click="cancelEdit" class="mt-2 sm:mt-0 sm:ml-2 w-full sm:w-auto inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Отменить
                         </button>
                     </form>
-                    
-                    
-
                 </div>
 
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
-                    <h3 class="text-lg font-medium mb-4">Список поставщиков</h3>
-                    
-
-
-
-<table v-if = "isLoaded" class="min-w-full divide-y divide-gray-200 overflow-x-auto">
-    <thead class="bg-gray-50">
-        <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Название
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Наценка (%)
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Себестоимость (₽)
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Итоговая цена (₽)
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Действия
-            </th>
-        </tr>
-    </thead>
-    
-        
- 
-    <tbody class="bg-white divide-y divide-gray-200">
-        <tr v-for="item in products.value" :key="item.id">
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">
-                    
-                    <Link :href="'/get-product-by-id/'+item.id" >
-                        {{ item.name }}
-                    </Link>
-                    
-                
-                </div> 
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ item.markup }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ item.price }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ item.total_price.toFixed(2) }}</div>
-            </td>
-           
-            <td class="px-6 py-4 whitespace-nowrap  text-sm font-medium">
-                <a @click="updateProducts(item.id)" :data="item.id" class="text-indigo-600 hover:text-indigo-900">Редактировать</a>
-                <a @click="deleteProducts(item.id)" :data="item.id" class="ml-2 text-red-600 hover:text-red-900">Удалить</a>
-            </td>
-        </tr>
-        </tbody>
-        </table>   
-
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
+                    <h3 class="text-lg font-medium mb-4">Список продуктов</h3>
+                    <!-- Таблица для десктопной версии -->
+                    <div v-if="isLoaded" class="hidden sm:block overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Название</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Наценка (%)</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Себестоимость (₽)</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Итоговая цена (₽)</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="item in products.value" :key="item.id">
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">
+                                            <Link :href="'/get-product-by-id/'+item.id">
+                                                {{ item.name }}
+                                            </Link>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.markup }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.price }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.total_price.toFixed(2) }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
+                                        <a @click="updateProducts(item.id)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Ред.</a>
+                                        <a @click="deleteProducts(item.id)" class="ml-2 text-red-600 hover:text-red-900 cursor-pointer">Удал.</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Мобильное представление -->
+                    <div v-if="isLoaded" class="sm:hidden">
+                        <div v-for="item in products.value" :key="item.id" class="bg-white shadow overflow-hidden sm:rounded-lg mb-4 p-4">
+                            <h4 class="text-lg leading-6 font-medium text-gray-900">
+                                <Link :href="'/get-product-by-id/'+item.id">
+                                    {{ item.name }}
+                                </Link>
+                            </h4>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Наценка: {{ item.markup }}%
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Себестоимость: {{ item.price }} ₽
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Итоговая цена: {{ item.total_price.toFixed(2) }} ₽
+                            </p>
+                            <div class="mt-2">
+                                <a @click="updateProducts(item.id)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer mr-2">Редактировать</a>
+                                <a @click="deleteProducts(item.id)" class="text-red-600 hover:text-red-900 cursor-pointer">Удалить</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+        <!-- Модальное окно с деталями продукта -->
         <div v-if="selectedProduct" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div class="mt-3 text-center">
@@ -386,5 +385,11 @@ const editingProduct = ref(null);
 
 .mred {
     background-color: rgba(104, 2, 10, 0.9);
+}
+
+@media (max-width: 640px) {
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+    }
 }
 </style>

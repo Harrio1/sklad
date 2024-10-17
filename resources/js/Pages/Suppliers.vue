@@ -115,9 +115,6 @@ function updateSuppliersToServ() {
 
 <template>
     <AppLayout title="Suppliers">
-        <div v-if="!isLoaded" class="preload">
-            <div class="preload2"></div>
-        </div>
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -125,9 +122,9 @@ function updateSuppliersToServ() {
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
+        <div class="py-6 sm:py-12" v-if="!isLoading">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mb-6">
                     <h3 class="text-lg font-medium mb-4">Добавить нового поставщика</h3>
                     <form>
                         <input type="hidden" name="_token" :value="csrf">
@@ -166,63 +163,100 @@ function updateSuppliersToServ() {
                     </form>
                 </div>
 
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-5">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
                     <h3 class="text-lg font-medium mb-4">Список поставщиков</h3>
-                    <table v-if="isLoaded" class="min-w-full divide-y divide-gray-200 overflow-x-auto">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Имя
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Адрес
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Номер телефона
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Комментарий
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Действия
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="item in suppliers.value" :key="item.id">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/150?img=1" alt="">
-                                        </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                {{ item.name }}
+                    <!-- Таблица для десктопной версии -->
+                    <div class="hidden sm:block overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Имя
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Адрес
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Телефон
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Комментарий
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Действия
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="item in suppliers.value" :key="item.id">
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/150?img=1" alt="">
                                             </div>
-                                            <div class="text-sm text-gray-500">
-                                                jane.cooper@example.com
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">
+                                                    {{ item.name }}
+                                                </div>
+                                                <div class="text-sm text-gray-500">
+                                                    jane.cooper@example.com
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ item.address }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ item.phone }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ item.comments }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a @click="updateSuppliers(item.id)" class="text-indigo-600 hover:text-indigo-900">Редактировать</a>
-                                    <a @click="deleteSuppliers(item.id)" class="ml-2 text-red-600 hover:text-red-900">Удалить</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.address }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                                        {{ item.phone }}
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                                        {{ item.comments }}
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
+                                        <a @click="updateSuppliers(item.id)" class="text-indigo-600 hover:text-indigo-900">Ред.</a>
+                                        <a @click="deleteSuppliers(item.id)" class="ml-2 text-red-600 hover:text-red-900">Удал.</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Мобильное представление -->
+                    <div class="sm:hidden">
+                        <div v-for="item in suppliers.value" :key="item.id" class="bg-white shadow overflow-hidden sm:rounded-lg mb-4 p-4">
+                            <div class="flex items-center mb-2">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/150?img=1" alt="">
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                        {{ item.name }}
+                                    </h3>
+                                    <p class="text-sm text-gray-500">
+                                        jane.cooper@example.com
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Адрес: {{ item.address }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Телефон: {{ item.phone }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Комментарий: {{ item.comments }}
+                            </p>
+                            <div class="mt-2">
+                                <a @click="updateSuppliers(item.id)" class="text-indigo-600 hover:text-indigo-900 mr-2">Редактировать</a>
+                                <a @click="deleteSuppliers(item.id)" class="text-red-600 hover:text-red-900">Удалить</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+        <div v-else class="preloader">
+            <div class="loader"></div>
         </div>
     </AppLayout>
 </template>
@@ -253,7 +287,7 @@ function updateSuppliersToServ() {
     background-color: rgba(104, 2, 10, 0.9);
 }
 
-.preload {
+.preloader {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -266,7 +300,7 @@ function updateSuppliersToServ() {
     top: 0;
 }
 
-.preload2 {
+.loader {
     position: relative;
     width: 50px;
     height: 50px;
@@ -275,7 +309,7 @@ function updateSuppliersToServ() {
     animation: preload 1.5s ease 0s infinite;
 }
 
-.preload2::after {
+.loader::after {
     content: '';
     width: 60px;
     height: 60px;
@@ -285,5 +319,11 @@ function updateSuppliersToServ() {
     left: -10px;
     top: -10px;
     animation: preload 1.5s ease 0.5s infinite;
+}
+
+@media (max-width: 640px) {
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+    }
 }
 </style>
