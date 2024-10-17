@@ -2,9 +2,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "vite --host",
+        "dev": "vite",
         "build": "vite build",
-        "serve": "php artisan serve --host=192.168.0.136",
+        "serve": "php artisan serve --host=26.61.233.20",
         "start": "concurrently \"npm run dev -- --host\" \"npm run serve\""
     },
     "devDependencies": {
