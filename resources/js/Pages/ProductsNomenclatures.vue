@@ -200,44 +200,53 @@ function getQuantityStep(unit) {
                             </select>
                         </div>
 
-                        <div v-for="(nomenclature, index) in form.nomenclatures" :key="index" class="mb-4">
-                            <div class="mb-2">
-                                <label :for="'nomenclature-' + index" class="block text-sm font-medium text-gray-700">Номенклатура</label>
-                                <select :id="'nomenclature-' + index" 
-                                        v-model="nomenclature.id"
-                                        @change="updateNomenclatureDetails(nomenclature)"
-                                        required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
-                                    <option :value="null">Выберите номенклатуру</option>
-                                    <option v-for="n in availableNomenclatures" 
-                                            :key="n.id" 
-                                            :value="n.id"
-                                            :disabled="form.nomenclatures.some(fn => fn.id === n.id && fn !== nomenclature)">
-                                        {{ n.name }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="mb-2">
-                                <label :for="'quantity-' + index" class="block text-sm font-medium text-gray-700">Количество</label>
-                                <input type="number" 
-                                       :id="'quantity-' + index" 
-                                       v-model.number="nomenclature.quantity"
-                                       @input="updateNomenclatureDetails(nomenclature)"
-                                       required 
-                                       :step="getQuantityStep(nomenclature.unit)"
-                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
-                            </div>
-                            <div class="mb-2">
-                                <label :for="'price-' + index" class="block text-sm font-medium text-gray-700">Цена (₽)</label>
-                                <input type="number" :id="'price-' + index" 
-                                       v-model.number="nomenclature.price"
-                                       readonly
-                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
-                            </div>
-                            <button type="button" @click="removeNomenclatureLine(index)" class="mt-2 text-red-600 hover:text-red-900">
-                                Удалить
-                            </button>
-                        </div>
+                        <table class="min-w-full divide-y divide-gray-200 mb-4">
+                            <thead>
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Номенклатура</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Количество</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Цена (₽)</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(nomenclature, index) in form.nomenclatures" :key="index">
+                                    <td class="px-3 py-2">
+                                        <select v-model="nomenclature.id"
+                                                @change="updateNomenclatureDetails(nomenclature)"
+                                                required
+                                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                                            <option :value="null">Выберите номенклатуру</option>
+                                            <option v-for="n in availableNomenclatures" 
+                                                    :key="n.id" 
+                                                    :value="n.id"
+                                                    :disabled="form.nomenclatures.some(fn => fn.id === n.id && fn !== nomenclature)">
+                                                {{ n.name }}
+                                            </option>
+                                        </select>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" 
+                                               v-model.number="nomenclature.quantity"
+                                               @input="updateNomenclatureDetails(nomenclature)"
+                                               required 
+                                               :step="getQuantityStep(nomenclature.unit)"
+                                               class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" 
+                                               v-model.number="nomenclature.price"
+                                               readonly
+                                               class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <button type="button" @click="removeNomenclatureLine(index)" class="text-red-600 hover:text-red-900">
+                                            Удалить
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
 
                         <button type="button" @click="addNomenclatureLine" 
                                 :disabled="!canAddNomenclatureLine"
