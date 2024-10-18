@@ -267,8 +267,8 @@ function formatPhoneNumber(value) {
                                         {{ item.comments }}
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
-                                        <a @click="updateSuppliers(item.id)" class="text-indigo-600 hover:text-indigo-900">Ред.</a>
-                                        <a @click="deleteSuppliers(item.id)" class="ml-2 text-red-600 hover:text-red-900">Удал.</a>
+                                        <a @click="updateSuppliers(item.id)" class="text-indigo-600 hover:text-indigo-900">Редактировать</a>
+                                        <a @click="deleteSuppliers(item.id)" class="ml-2 text-red-600 hover:text-red-900">Удалить</a>
                                     </td>
                                 </tr>
                             </tbody>
