@@ -7,20 +7,24 @@ use App\Models\Nomenclatures;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+// Контроллер для управления действиями, связанными с поставками
 class SuppliesController extends Controller
 {
+    // Метод для получения всех поставок
     public function getSupplies()
     {
         $supplies = Supplies::with('nomenclature')->get();
         return response()->json(['supplies' => $supplies]);
     }
 
+    // Метод для получения всех номенклатур
     public function getNomenclatures()
     {
         $nomenclatures = Nomenclatures::all();
         return response()->json(['nomenclatures' => $nomenclatures]);
     }
 
+    // Метод для добавления новой поставки
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -57,10 +61,10 @@ class SuppliesController extends Controller
         }
     }
 
+    // Метод для обновления поставки
     public function update(Request $request)
     {
         $supply = Supplies::find($request->supplyId);
-
 
         $flight = Supplies::findOr($request->supplyId, function () {
             return response()->json(['status' => 'Ошибка, элемент не найден']);
@@ -75,6 +79,7 @@ class SuppliesController extends Controller
         return response()->json(['status' => 'Поставка успешно обновлена']);
     }
 
+    // Метод для удаления поставки
     public function delete(Request $request)
     {
         Supplies::destroy($request->supplyId);

@@ -1,30 +1,33 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 
+// Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
 
+// Реактивная форма для ввода данных продукта
 const form = useForm({
     name: '',
     markup: '',
 });
 
-// если редактируем
+// Переменные для управления состоянием редактирования
 let isEdit = ref(false);
 let isEditId = ref(0);
-// открыто ли модальное окно 
+
+// Переменные для управления модальным окном и сообщениями
 let isOpenModal = ref(false);
-// сообщение от сервера
 let messageResponse = ref('');
 let messageResponseColor = ref('');
-// загруженны ли данные с сервера
+
+// Переменная для отслеживания загрузки данных
 let isLoaded = ref(false);
 
+// Функция для открытия модального окна
 function openModal(message, color) {
     messageResponse.value = message;
     messageResponseColor.value = color;
@@ -37,6 +40,7 @@ function openModal(message, color) {
     setTimeout(closemessageResponse, 3000);
 }
 
+// Функция для закрытия модального окна
 function closemessageResponse() {
     document.querySelector('.modalMessage').classList.remove('show');
     setTimeout(() => {
@@ -46,9 +50,11 @@ function closemessageResponse() {
     }, 500);
 }
 
+// Реактивный объект для хранения данных продуктов
 const products = reactive({})
 
-function  getProducts(){
+// Функция для получения данных продуктов
+function getProducts(){
     axios.get(route('products.index'))
         .then(response => {
             products.value = response.data.products;
@@ -57,7 +63,7 @@ function  getProducts(){
 }
 getProducts();
 
-
+// Функция для обновления таблицы продуктов
 function updateTable(mes, isok){
     isEdit = false;
     isEditId = 0;
@@ -72,6 +78,8 @@ function updateTable(mes, isok){
     getProducts();
     setTimeout(closemessageResponse, 2000);
 }
+
+// Функция для подготовки данных продукта к редактированию
 function updateProducts(ids){
     let b = products.value.find((el) => el.id == ids);
     form.name = b.name;
@@ -80,17 +88,20 @@ function updateProducts(ids){
     isEditId.value = ids;
 }
 
+// Функция для очистки формы продукта
 function clearProducts(){
     form.name = '';
     form.markup = '';
 }
 
+// Функция для отмены редактирования
 function cancelEdit() {
     isEdit.value = false;
     isEditId.value = 0;
     form.reset();
 }
 
+// Функция для удаления продукта
 function deleteProducts(ids){
     let a = confirm('Вы действительно хотите удалить запись?');
     if (a == true) {
@@ -106,9 +117,11 @@ function deleteProducts(ids){
     }
 }
 
+// Переменные для управления модальным окном с деталями продукта
 const selectedProduct = ref(null);
 const showModal = ref(false);
 
+// Функция для открытия модального окна с деталями продукта
 function openProductDetails(productId) {
     axios.get(route('products.details', productId))
         .then(response => {
@@ -120,11 +133,13 @@ function openProductDetails(productId) {
         });
 }
 
+// Функция для закрытия модального окна с деталями продукта
 function closeModal() {
     showModal.value = false;
     selectedProduct.value = null;
 }
 
+// Переменные для поиска и сортировки
 const searchQuery = ref('');
 const sortBy = ref('name');
 const sortOrder = ref('asc');
@@ -132,35 +147,10 @@ const sortOrder = ref('asc');
 const minPrice = ref('');
 const maxPrice = ref('');
 
-// Сортировка и поиск
-// const filteredAndSortedProducts = computed(() => {
-//     let filtered = products.value.filter(product => 
-//         product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) &&
-//         (minPrice.value === '' || product.total_price >= parseFloat(minPrice.value)) &&
-//         (maxPrice.value === '' || product.total_price <= parseFloat(maxPrice.value))
-//     );
-    
-//     filtered.sort((a, b) => {
-//         let modifier = sortOrder.value === 'asc' ? 1 : -1;
-//         if (a[sortBy.value] < b[sortBy.value]) return -1 * modifier;
-//         if (a[sortBy.value] > b[sortBy.value]) return 1 * modifier;
-//         return 0;
-//     });
-    
-//     return filtered;
-// });
-
-// function toggleSort(column) {
-//     if (sortBy.value === column) {
-//         sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-//     } else {
-//         sortBy.value = column;
-//         sortOrder.value = 'asc';
-//     }
-// }
-
+// Объект для хранения ошибок валидации
 const errors = ref({});
 
+// Функция для валидации формы
 function validateForm() {
     errors.value = {};
     if (!form.name) errors.value.name = 'Название продукта обязательно';
@@ -169,6 +159,7 @@ function validateForm() {
     return Object.keys(errors.value).length === 0;
 }
 
+// Функция для отправки формы
 function submitForm() {
     if (validateForm()) {
         const url = isEdit.value ? route('products.update', isEditId.value) : route('products.store');
@@ -198,27 +189,6 @@ function submitForm() {
 }
 
 const editingProduct = ref(null);
-
-// function startEditing(product) {
-//     editingProduct.value = { ...product };
-// }
-
-// function cancelEditing() {
-//     editingProduct.value = null;
-// }
-
-// function saveEdit() {
-//     if (validateForm(editingProduct.value)) {
-//         axios.put(`/update-product/${editingProduct.value.id}`, editingProduct.value)
-//             .then(response => {
-//                 getProducts();
-//                 editingProduct.value = null;
-//             })
-//             .catch(error => {
-//                 console.error('Error updating product:', error);
-//             });
-//     }
-// }
 
 </script>
 

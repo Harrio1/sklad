@@ -3,10 +3,13 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive, onMounted, watch } from 'vue';
 import axios from 'axios';
 
+// Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-const units = ['шт.', 'кг.', 'л.']; // Массив единиц измерения
+// Массив единиц измерения
+const units = ['шт.', 'кг.', 'л.'];
 
+// Реактивная форма для ввода данных
 const form = reactive({
     name: null,
     suppliers_id: null,
@@ -30,6 +33,7 @@ watch(() => form.unit_of_measurement, (newValue) => {
     }
 });
 
+// Переменные для управления модальным окном и сообщениями
 let isOpenModal = ref(false);
 let messageResponse = ref('');
 const suppliers = ref([]);
@@ -37,6 +41,7 @@ const isLoading = ref(true); // Добавляем состояние загру
 
 let messageResponseColor = ref(''); // Добавляем переменную для цвета сообщения
 
+// Функция для открытия модального окна
 function openModal(message, color) {
     messageResponse.value = message;
     messageResponseColor.value = color;
@@ -49,6 +54,7 @@ function openModal(message, color) {
     setTimeout(closemessageResponse, 3000);
 }
 
+// Функция для закрытия модального окна
 function closemessageResponse() {
     document.querySelector('.modalMessage').classList.remove('show');
     setTimeout(() => {
@@ -58,8 +64,10 @@ function closemessageResponse() {
     }, 500);
 }
 
+// Реактивный объект для хранения данных номенклатуры
 const nomenclature = reactive({});
 
+// Функция для получения данных номенклатуры
 function getNomenclature() {
     axios({
         method: 'get',
@@ -70,6 +78,7 @@ function getNomenclature() {
     });
 }
 
+// Функция для получения данных поставщиков
 function getSuppliers() {
     axios({
         method: 'get',
@@ -80,11 +89,13 @@ function getSuppliers() {
     });
 }
 
+// Выполняем функции при монтировании компонента
 onMounted(() => {
     getNomenclature();
     getSuppliers();
 });
 
+// Функция для удаления номенклатуры
 function deleteNomenclature(ids) {
     let a = confirm('Вы действительно хотите удалить запись?');
     if (a == true) {
@@ -97,6 +108,7 @@ function deleteNomenclature(ids) {
     }
 }
 
+// Функция для обновления таблицы
 function updateTable(mes) {
     openModal(mes, 'mgreen');
     getNomenclature();
@@ -106,6 +118,7 @@ function updateTable(mes) {
     form.unit_of_measurement = '';
 }
 
+// Функция для отправки данных номенклатуры
 function responseNomenclature() {
     // Перед отправкой данных, убедимся, что цена соответствует выбранной единице измерения
     if (form.unit_of_measurement === 'шт.') {
@@ -176,7 +189,6 @@ function responseNomenclature() {
                                    :step="priceStep" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
-
 
                         <button type="submit" @click.prevent="responseNomenclature"
                                 class="w-full sm:w-auto inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">

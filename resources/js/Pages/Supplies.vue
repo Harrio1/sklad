@@ -3,43 +3,56 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive, onMounted, computed } from 'vue';
 import axios from 'axios';
 
+// Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+// Реактивная форма для ввода данных поставки
 const form = reactive({
     supplier_id: null,
     nomenclatures: [{ id: null, quantity: 0, price: 0, unit: '' }]
 });
 
+// Переменные для управления состоянием редактирования
 let isEdit = ref(false);
 let isEditId = ref(0);
+
+// Переменные для управления модальным окном и сообщениями
 let isOpenModal = ref(false);
 let messageResponse = ref('');
+let messageResponseColor = ref(''); // Добавляем переменную для цвета сообщения
+
+// Переменные для хранения данных
 let nomenclatures = ref([]);
 let supplies = ref([]);
 const isLoading = ref(true);
 
+// Вычисляемая переменная для общей цены
 const totalPrice = computed(() => {
     return calculateTotalPrice(form.quantity, form.nomenclatureId);
 });
 
+// Выполняем функции при монтировании компонента
 onMounted(() => {
     Promise.all([getNomenclatures(), getSupplies()]).then(() => {
         isLoading.value = false;
     });
 });
 
+// Функция для получения данных о номенклатурах
 function getNomenclatures() {
     return axios.get('/get-nomenclatures').then((response) => {
         nomenclatures.value = response.data.nomenclatures;
     });
 }
 
+// Функция для получения данных о поставках
 function getSupplies() {
     return axios.get('/get-supplies').then((response) => {
         supplies.value = response.data.supplies;
     });
 }
 
+// Функция для добавления новой поставки
 function addSupply() {
     axios.post('/add-supply', {
         nomenclature_id: form.nomenclatureId,
@@ -53,33 +66,14 @@ function addSupply() {
     });
 }
 
+// Функция для обновления существующей поставки
 function updateSupply() {
     axios.post('/update-supply', { ...form, supplyId: isEditId.value }).then((response) => {
         updateTable(response.data.status);
     });
 }
 
-function deleteSupply(id) {
-    if (confirm('Вы действительно хотите удалить эту поставку?')) {
-        axios.post('/delete-supply', { supplyId: id }).then((response) => {
-            updateTable(response.data.status);
-        });
-    }
-}
-
-function updateTable(message) {
-    isEdit.value = false;
-    isEditId.value = 0;
-    openModal(message, 'mgreen');
-    getSupplies();
-    resetForm();
-}
-
-function resetForm() {
-    Object.keys(form).forEach(key => form[key] = null);
-    form.unit = 'шт.';
-}
-
+// Функция для редактирования поставки
 function editSupply(supply) {
     isEdit.value = true;
     isEditId.value = supply.id;
@@ -90,18 +84,21 @@ function editSupply(supply) {
     form.price = supply.price;
 }
 
+// Функция для вычисления общей цены
 function calculateTotalPrice(quantity, nomenclatureId) {
     const nomenclature = nomenclatures.value.find(n => n.id === nomenclatureId);
     const pricePerUnit = nomenclature ? nomenclature.price_per_unit : 0;
     return (quantity || 0) * pricePerUnit;
 }
 
+// Функция для валидации количества
 function validateQuantity(form) {
     if (isWholeNumber(form.unit)) {
         form.quantity = Math.floor(form.quantity);
     }
 }
 
+// Функция для обновления деталей номенклатуры
 function updateNomenclatureDetails(nomenclatureId) {
     const selectedNomenclature = nomenclatures.value.find(n => n.id === nomenclatureId);
     if (selectedNomenclature) {
@@ -110,12 +107,12 @@ function updateNomenclatureDetails(nomenclatureId) {
     }
 }
 
+// Функция для проверки, является ли единица измерения целым числом
 function isWholeNumber(unit) {
     return unit === 'шт.';
 }
 
-let messageResponseColor = ref(''); // Добавляем переменную для цвета сообщения
-
+// Функция для открытия модального окна
 function openModal(message, color) {
     messageResponse.value = message;
     messageResponseColor.value = color;
@@ -128,6 +125,7 @@ function openModal(message, color) {
     setTimeout(closemessageResponse, 3000);
 }
 
+// Функция для закрытия модального окна
 function closemessageResponse() {
     document.querySelector('.modalMessage').classList.remove('show');
     setTimeout(() => {

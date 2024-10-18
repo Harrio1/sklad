@@ -3,22 +3,28 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 
+// Получаем CSRF-токен из мета-тега
 const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+// Реактивная форма для ввода данных
 const form = reactive({
     product_id: null,
     nomenclatures: [{ id: null, quantity: 0, price: 0, unit: '' }]
 });
 
+// Переменные для управления модальным окном и сообщениями
 const isOpenModal = ref(false);
 const messageResponse = ref('');
+const messageResponseColor = ref(''); // Добавляем переменную для цвета сообщения
+
+// Переменные для хранения данных
 const products = ref([]);
 const productsNomenclatures = ref([]);
 const isLoading = ref(true);
 const availableNomenclatures = ref([]);
 const isLoadingNomenclatures = ref(false);
-let messageResponseColor = ref(''); // Добавляем переменную для цвета сообщения
 
+// Функция для открытия модального окна
 function openModal(message, color) {
     messageResponse.value = message;
     messageResponseColor.value = color;
@@ -34,6 +40,7 @@ function openModal(message, color) {
     setTimeout(closemessageResponse, 3000);
 }
 
+// Функция для закрытия модального окна
 function closemessageResponse() {
     const modalElement = document.querySelector('.modalMessage');
     if (modalElement) {
@@ -46,6 +53,7 @@ function closemessageResponse() {
     }, 500);
 }
 
+// Функция для получения данных о продуктах и их номенклатурах
 function getProductsNomenclatures() {
     axios.get(route('get-products-nomenclatures'))
         .then((response) => {
@@ -55,20 +63,24 @@ function getProductsNomenclatures() {
         });
 }
 
+// Выполняем функцию при монтировании компонента
 onMounted(() => {
     getProductsNomenclatures();
 });
 
+// Функция для добавления новой строки номенклатуры
 function addNomenclatureLine() {
     if (canAddNomenclatureLine.value) {
         form.nomenclatures.push({ id: null, quantity: 0, price: 0, unit: '' });
     }
 }
 
+// Функция для удаления строки номенклатуры
 function removeNomenclatureLine(index) {
     form.nomenclatures.splice(index, 1);
 }
 
+// Функция для удаления связи продукта и номенклатуры
 function deleteProductNomenclature(productId, nomenclatureId) {
     if (confirm('Вы действительно хотите удалить эту связь?')) {
         axios.post('/delete-products-nomenclatures', {
@@ -84,6 +96,7 @@ function deleteProductNomenclature(productId, nomenclatureId) {
     }
 }
 
+// Функция для отправки формы
 function submitForm() {
     axios.post('/add-products-nomenclatures', form)
         .then((response) => {
@@ -98,6 +111,7 @@ function submitForm() {
         });
 }
 
+// Функция для загрузки доступных номенклатур
 function loadAvailableNomenclatures() {
     isLoadingNomenclatures.value = true;
     axios.get('/get-available-nomenclatures')
@@ -110,6 +124,7 @@ function loadAvailableNomenclatures() {
         });
 }
 
+// Следим за изменением выбранного продукта
 watch(() => form.product_id, (newValue) => {
     if (newValue) {
         loadAvailableNomenclatures();
@@ -119,19 +134,22 @@ watch(() => form.product_id, (newValue) => {
     }
 });
 
+// Вычисляемое свойство для проверки возможности добавления новой строки номенклатуры
 const canAddNomenclatureLine = computed(() => {
     return availableNomenclatures.value.length > form.nomenclatures.length;
 });
 
+// Функция для проверки доступности номенклатуры
 function isNomenclatureAvailable(nomenclatureId, currentIndex) {
     return !form.nomenclatures.some((n, index) => index !== currentIndex && n.id === nomenclatureId);
 }
 
-// Добавим новую функцию для расчета общей цены
+// Функция для расчета общей цены
 function calculateTotalPrice(nomenclature) {
     return (nomenclature.pivot.price * nomenclature.pivot.quantity).toFixed(2);
 }
 
+// Функция для обновления деталей номенклатуры
 function updateNomenclatureDetails(nomenclature) {
     const selectedNomenclature = availableNomenclatures.value.find(n => n.id === nomenclature.id);
     if (selectedNomenclature) {
@@ -145,11 +163,10 @@ function updateNomenclatureDetails(nomenclature) {
     }
 }
 
-// Добавляем новую функцию для определения шага ввода количества
+// Функция для определения шага ввода количества
 function getQuantityStep(unit) {
     return unit === 'шт.' ? 1 : 0.01;
 }
-
 </script>
 
 <template>
@@ -331,6 +348,7 @@ function getQuantityStep(unit) {
     z-index: 9999;
     backdrop-filter: blur(5px);
 }
+
 .loader {
     border: 16px solid #f3f3f3;
     border-radius: 50%;
@@ -339,6 +357,7 @@ function getQuantityStep(unit) {
     height: 120px;
     animation: spin 2s linear infinite;
 }
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }

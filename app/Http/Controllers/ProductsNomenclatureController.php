@@ -11,8 +11,10 @@ use App\Models\Products_Nomenclature;
 use App\Models\Supplies;
 use Inertia\Inertia;
 
+// Контроллер для управления действиями, связанными с продуктами и номенклатурами
 class ProductsNomenclatureController extends Controller
 {
+    // Метод для добавления новой связи продукта и номенклатуры
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -60,6 +62,7 @@ class ProductsNomenclatureController extends Controller
         return response()->json(['status' => 'Данные добавлены'], 200);
     }
 
+    // Метод для получения всех связей продуктов и номенклатур
     public function getProductsNomenclatures()
     {
         $products = Products::with('nomenclatures')->get();
@@ -71,6 +74,7 @@ class ProductsNomenclatureController extends Controller
         ], 200);
     }
 
+    // Метод для удаления связи по ID
     public function deleteById(Request $request)
     {
         $product = Products::findOrFail($request->product_id);
@@ -79,6 +83,7 @@ class ProductsNomenclatureController extends Controller
         return Response::json(['status' => 'Связь успешно удалена'], 200);
     }
 
+    // Метод для получения доступных номенклатур
     public function getAvailableNomenclatures()
     {
         $availableNomenclatures = Nomenclatures::select('nomenclatures.id', 'nomenclatures.name', 'supplies.unit', 'nomenclatures.price_per_unit')
@@ -89,6 +94,7 @@ class ProductsNomenclatureController extends Controller
         return Response::json(['nomenclatures' => $availableNomenclatures], 200);
     }
 
+    // Метод для отображения страницы с продуктами и номенклатурами
     public function index()
     {
         $productsNomenclatures = Products_Nomenclature::with(['product', 'nomenclature'])->get();
@@ -118,6 +124,7 @@ class ProductsNomenclatureController extends Controller
         ]);
     }
 
+    // Метод для удаления связи продукта и номенклатуры
     public function delete(Request $request)
     {
         $request->validate([

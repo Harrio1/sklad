@@ -1,10 +1,13 @@
 <script setup>
+// Импортируем необходимые компоненты и библиотеки
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive } from 'vue';
 import axios from 'axios';
 
+// Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+// Создаем реактивный объект для формы поставщика
 const form = reactive({
     supplierName: null,
     address: null,
@@ -12,13 +15,15 @@ const form = reactive({
     phoneNumber: null
 });
 
-let isEdit = ref(false);
-let isEditId = ref(0);
-let isOpenModal = ref(false);
-let messageResponse = ref('');
-let messageResponseColor = ref('');
-let isLoaded = ref(false);
+// Создаем реактивные переменные для управления состоянием
+let isEdit = ref(false); // Флаг для режима редактирования
+let isEditId = ref(0); // ID редактируемого поставщика
+let isOpenModal = ref(false); // Флаг для отображения модального окна
+let messageResponse = ref(''); // Сообщение для модального окна
+let messageResponseColor = ref(''); // Цвет сообщения
+let isLoaded = ref(false); // Флаг для загрузки данных
 
+// Функция для закрытия модального окна
 function closemessageResponse() {
     document.querySelector('.modalMessage').classList.remove('show');
     setTimeout(() => {
@@ -28,24 +33,29 @@ function closemessageResponse() {
     }, 500);
 }
 
+// Создаем реактивный объект для списка поставщиков
 const suppliers = reactive({});
+
+// Функция для получения списка поставщиков с сервера
 function getSuppliers() {
     axios.get('/get-suppliers').then((response) => {
         suppliers.value = response.data.suppliers;
         isLoaded.value = true;
     });
 }
-getSuppliers();
+getSuppliers(); // Вызываем функцию для загрузки данных при инициализации
 
+// Функция для удаления поставщиков
 function deleteSuppliers(ids) {
     if (confirm('Вы действительно хотите удалить запись?')) {
         axios.post('/delete-suppliers', { suppliers_id: ids }).then((response) => {
             openModal(response.data.status, 'mgreen');
-            getSuppliers();
+            getSuppliers(); // Обновляем список после удаления
         });
     }
 }
 
+// Функция для подготовки данных поставщика к редактированию
 function updateSuppliers(ids) {
     let b = suppliers.value.find((el) => el.id == ids);
     form.supplierName = b.name;
@@ -56,6 +66,7 @@ function updateSuppliers(ids) {
     isEditId.value = ids;
 }
 
+// Функция для очистки формы
 function clearSuppliers() {
     form.supplierName = '';
     form.supplierComments = '';
@@ -63,6 +74,7 @@ function clearSuppliers() {
     form.phoneNumber = null;
 }
 
+// Функция для открытия модального окна с сообщением
 function openModal(message, color) {
     messageResponse.value = message;
     messageResponseColor.value = color;
@@ -71,10 +83,11 @@ function openModal(message, color) {
         document.querySelector('.modalMessage').classList.add('show');
     }, 10);
 
-    // Закрыть модальное окно через 2 секунды
+    // Закрыть модальное окно через 3 секунды
     setTimeout(closemessageResponse, 3000);
 }
 
+// Функция для добавления нового поставщика
 function responseSuppliers() {
     axios.post('/add-suppliers', {
         csrf: csrf,
@@ -84,15 +97,16 @@ function responseSuppliers() {
         phoneNumber: form.phoneNumber
     }).then((response) => {
         if (response.data.isOk) {
-            clearSuppliers();
+            clearSuppliers(); // Очищаем форму после успешного добавления
             openModal(response.data.status, 'mgreen');
-            getSuppliers();
+            getSuppliers(); // Обновляем список поставщиков
         } else {
             openModal(response.data.status, 'mred');
         }
     });
 }
 
+// Функция для обновления данных поставщика на сервере
 function updateSuppliersToServ() {
     axios.post('/update-suppliers', {
         csrf: csrf,
@@ -103,9 +117,9 @@ function updateSuppliersToServ() {
         phoneNumber: form.phoneNumber
     }).then((response) => {
         if (response.data.isOk) {
-            clearSuppliers();
+            clearSuppliers(); // Очищаем форму после успешного обновления
             openModal(response.data.status, 'mgreen');
-            getSuppliers();
+            getSuppliers(); // Обновляем список поставщиков
         } else {
             openModal(response.data.status, 'mred');
         }
@@ -115,6 +129,7 @@ function updateSuppliersToServ() {
 
 <template>
     <AppLayout title="Suppliers">
+        <!-- Модальное окно для отображения сообщений -->
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -122,11 +137,13 @@ function updateSuppliersToServ() {
             </h2>
         </template>
 
+        <!-- Основной контент страницы -->
         <div class="py-6 sm:py-12" v-if="!isLoading">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mb-6">
                     <h3 class="text-lg font-medium mb-4">Добавить нового поставщика</h3>
                     <form>
+                        <!-- Поля формы для добавления/редактирования поставщика -->
                         <input type="hidden" name="_token" :value="csrf">
                         <div class="mb-4">
                             <label for="supplierName" class="block text-sm font-medium text-gray-700">Имя поставщика</label>
@@ -152,6 +169,7 @@ function updateSuppliersToServ() {
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
 
+                        <!-- Кнопки для добавления или редактирования поставщика -->
                         <button v-if="!isEdit" type="submit" @click.prevent="responseSuppliers()"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить поставщика
@@ -163,6 +181,7 @@ function updateSuppliersToServ() {
                     </form>
                 </div>
 
+                <!-- Список поставщиков -->
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
                     <h3 class="text-lg font-medium mb-4">Список поставщиков</h3>
                     <!-- Таблица для десктопной версии -->
@@ -255,6 +274,7 @@ function updateSuppliersToServ() {
                 </div>
             </div>
         </div>
+        <!-- Прелоадер, отображаемый во время загрузки данных -->
         <div v-else class="preloader">
             <div class="loader"></div>
         </div>
@@ -262,6 +282,7 @@ function updateSuppliersToServ() {
 </template>
 
 <style scoped>
+/* Стили для модального окна */
 .modalMessage {
     position: fixed;
     top: 10%;
@@ -287,6 +308,7 @@ function updateSuppliersToServ() {
     background-color: rgba(104, 2, 10, 0.9);
 }
 
+/* Стили для прелоадера */
 .preloader {
     position: absolute;
     width: 100%;

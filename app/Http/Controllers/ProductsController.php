@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
+// Контроллер для управления действиями, связанными с продуктами
 class ProductsController extends Controller
 {
+    // Метод для получения списка всех продуктов
     public function getProducts()
     {
         $products = Products::with('nomenclatures')->get();
@@ -26,6 +28,7 @@ class ProductsController extends Controller
         return Response::json(['products' => $products], 200);
     }
 
+    // Метод для добавления нового продукта
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -52,6 +55,7 @@ class ProductsController extends Controller
         ]);
     }
 
+    // Метод для обновления данных продукта
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -75,6 +79,7 @@ class ProductsController extends Controller
         ]);
     }
 
+    // Метод для удаления продукта
     public function delete($id)
     {
         $product = Products::findOrFail($id);
@@ -83,6 +88,7 @@ class ProductsController extends Controller
         return Response::json(['status' => 'Продукт успешно удален'], 200);
     }
 
+    // Метод для получения деталей продукта
     public function getProductDetails($id)
     {
         $product = Products::with('nomenclatures')->findOrFail($id);
