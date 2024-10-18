@@ -57,8 +57,12 @@ function closemessageResponse() {
 function getProductsNomenclatures() {
     axios.get(route('get-products-nomenclatures'))
         .then((response) => {
-            products.value = response.data.products;
-            productsNomenclatures.value = response.data.products;
+            products.value = response.data.products || [];
+            productsNomenclatures.value = response.data.products.filter(product => product.nomenclatures && product.nomenclatures.length > 0) || [];
+            isLoading.value = false;
+        }).catch(() => {
+            products.value = [];
+            productsNomenclatures.value = [];
             isLoading.value = false;
         });
 }

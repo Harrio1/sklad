@@ -56,12 +56,11 @@ Route::middleware([
     Route::get('/supplies', function () {
         return Inertia::render('Supplies');
     })->name('supplies');
-
     Route::get('/get-supplies', [SuppliesController::class, 'getSupplies'])->name('get-supplies');
     Route::get('/get-nomenclatures', [SuppliesController::class, 'getNomenclatures'])->name('get-nomenclatures');
     Route::post('/add-supply', [SuppliesController::class, 'store'])->name('add-supply');
     Route::post('/update-supply', [SuppliesController::class, 'update'])->name('update-supply');
-    Route::post('/delete-supply', [SuppliesController::class, 'delete'])->name('delete-supply');
+    Route::delete('/delete-supply/{id}', [SuppliesController::class, 'delete'])->name('delete-supply');
 
 
 // nomenclatures

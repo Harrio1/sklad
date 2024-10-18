@@ -3,7 +3,6 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive } from 'vue';
 import axios from 'axios';
-import IMask from 'imask';
 
 // Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');

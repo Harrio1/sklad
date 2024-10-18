@@ -80,9 +80,15 @@ class SuppliesController extends Controller
     }
 
     // Метод для удаления поставки
-    public function delete(Request $request)
+    public function delete($id)
     {
-        Supplies::destroy($request->supplyId);
-        return response()->json(['status' => 'Поставка успешно удалена']);
+        $supply = Supplies::find($id);
+ 
+        if ($supply) {
+            $supply->delete();
+            return response()->json(['status' => 'Поставка успешно удалена']);
+        } else {
+            return response()->json(['status' => 'Поставка не найдена'], 404);
+        }
     }
 }

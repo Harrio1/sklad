@@ -56,7 +56,10 @@ function openModal(message, color) {
 
 // Функция для закрытия модального окна
 function closemessageResponse() {
-    document.querySelector('.modalMessage').classList.remove('show');
+    const modalElement = document.querySelector('.modalMessage');
+    if (modalElement) {
+        modalElement.classList.remove('show');
+    }
     setTimeout(() => {
         isOpenModal.value = false;
         messageResponse.value = '';

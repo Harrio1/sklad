@@ -212,11 +212,11 @@ const logout = () => {
                         <ResponsiveNavLink :href="route('suppliers')" :active="route().current('suppliers')">
                                     Поставщики
                                 </ResponsiveNavLink>
-                                <ResponsiveNavLink :href="route('supplies')" :active="route().current('supplies')">
-                                    Поставки
-                                </ResponsiveNavLink>
                                 <ResponsiveNavLink :href="route('nomenclature')" :active="route().current('nomenclature')">
                                     Номенклатура
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink :href="route('supplies')" :active="route().current('supplies')">
+                                    Поставки
                                 </ResponsiveNavLink>
                                 <ResponsiveNavLink :href="route('products')" :active="route().current('products')">
                                     Продукты

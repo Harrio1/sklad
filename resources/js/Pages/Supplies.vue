@@ -60,9 +60,11 @@ function addSupply() {
         quantity: form.quantity,
         unit: form.unit
     }).then((response) => {
-        updateTable(response.data.status);
+        openModal('Поставка успешно добавлена!', 'mgreen');
+        getSupplies();
     }).catch(error => {
         console.error('Error adding supply:', error);
+        openModal('Ошибка при добавлении поставки.', 'mred');
     });
 }
 
@@ -134,6 +136,32 @@ function closemessageResponse() {
         messageResponseColor.value = '';
     }, 500);
 }
+
+function updateTable(status) {
+    if (status === 'success') {
+        // Обновите данные поставок, например, вызвав getSupplies
+        getSupplies();
+        openModal('Поставка успешно добавлена!', 'mgreen');
+    } else {
+        openModal('Ошибка при добавлении поставки.', 'mred');
+    }
+}
+
+function deleteSupply(supplyId) {
+       axios.delete(`/delete-supply/${supplyId}`)
+           .then(response => {
+               if (response.data.status === 'Поставка успешно удалена') {
+                   getSupplies(); // Обновите данные поставок
+                   openModal('Поставка успешно удалена!', 'mgreen');
+               } else {
+                   openModal('Ошибка при удалении поставки.', 'mred');
+               }
+           })
+           .catch(error => {
+               console.error('Error deleting supply:', error);
+               openModal('Ошибка при удалении поставки.', 'mred');
+           });
+   }
 </script>
 
 <template>
@@ -212,8 +240,8 @@ function closemessageResponse() {
                                     <td class="px-3 py-2 whitespace-nowrap">{{ supply.quantity }} {{ supply.unit }}</td>
                                     <td class="px-3 py-2 whitespace-nowrap">{{ supply.price }}</td>
                                     <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
-                                        <a @click="editSupply(supply)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Ред.</a>
-                                        <a @click="deleteSupply(supply.id)" class="ml-2 text-red-600 hover:text-red-900 cursor-pointer">Удал.</a>
+                                        <a @click="editSupply(supply)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Редактировать</a>
+                                        <a @click="deleteSupply(supply.id)" class="ml-2 text-red-600 hover:text-red-900 cursor-pointer">Удалить</a>
                                     </td>
                                 </tr>
                             </tbody>
