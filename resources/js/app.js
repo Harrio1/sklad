@@ -5,7 +5,7 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
-import IMaskDirective from './directives/imask'; // Импортируйте вашу директиву
+import IMaskDirective from './Directives/imask'; // Импортируйте вашу директиву
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
