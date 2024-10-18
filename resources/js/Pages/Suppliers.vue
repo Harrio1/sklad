@@ -1,8 +1,9 @@
 <script setup>
 // Импортируем необходимые компоненты и библиотеки
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import axios from 'axios';
+import IMask from 'imask';
 
 // Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -95,7 +96,7 @@ function responseSuppliers() {
         supplierName: form.supplierName,
         address: form.address,
         supplierComments: form.supplierComments,
-        phoneNumber: form.phoneNumber.replace(/\D/g, '') // Удаляем все нецифровые символы
+        phoneNumber: cleanPhoneNumber(form.phoneNumber)
     }).then((response) => {
         if (response.data.isOk) {
             clearSuppliers(); // Очищаем форму после успешного добавления
@@ -115,7 +116,7 @@ function updateSuppliersToServ() {
         supplierName: form.supplierName,
         address: form.address,
         supplierComments: form.supplierComments,
-        phoneNumber: form.phoneNumber.replace(/\D/g, '') // Удаляем все нецифровые символы
+        phoneNumber: cleanPhoneNumber(form.phoneNumber)
     }).then((response) => {
         if (response.data.isOk) {
             clearSuppliers(); // Очищаем форму после успешного обновления
@@ -127,14 +128,36 @@ function updateSuppliersToServ() {
     });
 }
 
-function formatPhoneNumber(phoneNumber) {
-    // Предполагаем, что номер телефона состоит только из цифр
-    const cleaned = ('' + phoneNumber).replace(/\D/g, '');
-    const match = cleaned.match(/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/);
-    if (match) {
-        return `+${match[1]}(${match[2]})${match[3]}-${match[4]}-${match[5]}`;
-    }
-    return phoneNumber; // Возвращаем оригинальный номер, если формат не совпадает
+// Новая функция для очистки номера телефона
+function cleanPhoneNumber(phoneNumber) {
+    return phoneNumber.replace(/\D/g, '').slice(0, 11);
+}
+
+const phoneNumberMask = {
+  mask: '+{7}(000)000-00-00',
+  lazy: false,
+  definitions: {
+    '_': /[0-9]/
+  }
+};
+
+function onPhoneInput(e) {
+  const input = e.target;
+  const value = input.value.replace(/\D/g, '').slice(0, 11);
+  const formattedValue = formatPhoneNumber(value);
+  form.phoneNumber = formattedValue;
+  
+  // Устанавливаем курсор в конец ввода
+  setTimeout(() => {
+    input.setSelectionRange(formattedValue.length, formattedValue.length);
+  }, 0);
+}
+
+function formatPhoneNumber(value) {
+  if (!value) return '';
+  const match = value.match(/^(\d{1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})$/);
+  if (!match) return value;
+  return `+${match[1]}${match[2] ? `(${match[2]}` : ''}${match[3] ? `)${match[3]}` : ''}${match[4] ? `-${match[4]}` : ''}${match[5] ? `-${match[5]}` : ''}`;
 }
 </script>
 
@@ -164,8 +187,7 @@ function formatPhoneNumber(phoneNumber) {
 
                         <div class="mb-4">
                             <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Номер телефона</label>
-                            <input type="tel" id="phoneNumber" v-model="form.phoneNumber" required
-                                   v-imask="'+{0}(000)000-00-00'"
+                            <input type="tel" id="phoneNumber" v-model="form.phoneNumber" @input="onPhoneInput" required
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
 
@@ -286,7 +308,7 @@ function formatPhoneNumber(phoneNumber) {
                 </div>
             </div>
         </div>
-        <!-- Прелоадер, отображаемы�� во время загрузки данных -->
+        <!-- Прелоадер, отображаемы во время загрузки данных -->
         <div v-else class="preloader">
             <div class="loader"></div>
         </div>
