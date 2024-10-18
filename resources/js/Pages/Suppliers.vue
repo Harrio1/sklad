@@ -3,6 +3,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive } from 'vue';
 import axios from 'axios';
+import IMask from 'imask';
 
 // Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -22,6 +23,7 @@ let isOpenModal = ref(false); // Флаг для отображения мода
 let messageResponse = ref(''); // Сообщение для модального окна
 let messageResponseColor = ref(''); // Цвет сообщения
 let isLoaded = ref(false); // Флаг для загрузки данных
+let isLoading = ref(false);
 
 // Функция для закрытия модального окна
 function closemessageResponse() {
@@ -94,7 +96,7 @@ function responseSuppliers() {
         supplierName: form.supplierName,
         address: form.address,
         supplierComments: form.supplierComments,
-        phoneNumber: form.phoneNumber
+        phoneNumber: form.phoneNumber.replace(/\D/g, '') // Удаляем все нецифровые символы
     }).then((response) => {
         if (response.data.isOk) {
             clearSuppliers(); // Очищаем форму после успешного добавления
@@ -114,7 +116,7 @@ function updateSuppliersToServ() {
         supplierName: form.supplierName,
         address: form.address,
         supplierComments: form.supplierComments,
-        phoneNumber: form.phoneNumber
+        phoneNumber: form.phoneNumber.replace(/\D/g, '') // Удаляем все нецифровые символы
     }).then((response) => {
         if (response.data.isOk) {
             clearSuppliers(); // Очищаем форму после успешного обновления
@@ -124,6 +126,16 @@ function updateSuppliersToServ() {
             openModal(response.data.status, 'mred');
         }
     });
+}
+
+function formatPhoneNumber(phoneNumber) {
+    // Предполагаем, что номер телефона состоит только из цифр
+    const cleaned = ('' + phoneNumber).replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/);
+    if (match) {
+        return `+${match[1]}(${match[2]})${match[3]}-${match[4]}-${match[5]}`;
+    }
+    return phoneNumber; // Возвращаем оригинальный номер, если формат не совпадает
 }
 </script>
 
@@ -154,6 +166,7 @@ function updateSuppliersToServ() {
                         <div class="mb-4">
                             <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Номер телефона</label>
                             <input type="tel" id="phoneNumber" v-model="form.phoneNumber" required
+                                   v-imask="'+{0}(000)000-00-00'"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
                         </div>
 
@@ -227,7 +240,7 @@ function updateSuppliersToServ() {
                                         <div class="text-sm text-gray-900">{{ item.address }}</div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                                        {{ item.phone }}
+                                        {{ formatPhoneNumber(item.phone) }}
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
                                         {{ item.comments }}
@@ -260,7 +273,7 @@ function updateSuppliersToServ() {
                                 Адрес: {{ item.address }}
                             </p>
                             <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                                Телефон: {{ item.phone }}
+                                Телефон: {{ formatPhoneNumber(item.phone) }}
                             </p>
                             <p class="mt-1 max-w-2xl text-sm text-gray-500">
                                 Комментарий: {{ item.comments }}
@@ -274,7 +287,7 @@ function updateSuppliersToServ() {
                 </div>
             </div>
         </div>
-        <!-- Прелоадер, отображаемый во время загрузки данных -->
+        <!-- Прелоадер, отображаемы�� во время загрузки данных -->
         <div v-else class="preloader">
             <div class="loader"></div>
         </div>

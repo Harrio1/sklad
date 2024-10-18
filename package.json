@@ -4,7 +4,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "serve": "php artisan serve --host=26.61.233.20",
+        "serve": "php artisan serve --host=127.0.0.1",
         "start": "concurrently \"npm run dev -- --host\" \"npm run serve\""
     },
     "devDependencies": {
@@ -21,6 +21,7 @@
         "vue": "^3.2.31"
     },
     "dependencies": {
-        "concurrently": "^9.0.1"
+        "concurrently": "^9.0.1",
+        "imask": "^7.6.1"
     }
 }
