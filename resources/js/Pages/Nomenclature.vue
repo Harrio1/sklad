@@ -118,6 +118,7 @@ function deleteNomenclature(ids) {
 function updateTable(mes) {
     openModal(mes, 'mgreen');
     getNomenclature();
+    getTurnoverData();
     form.name = '';
     form.suppliers_id = '';
     form.price_per_unit = '';
@@ -308,60 +309,87 @@ watch(currentTab, (newTab) => {
 
                 <div v-if="currentTab === 'turnover'" class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
                     <h3 class="text-lg font-medium mb-4">Оборотная ведомость</h3>
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Имя
-                                </th>
-                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Поставщик
-                                </th>
-                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Ед. изм.
-                                </th>
-                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Остаток на начало
-                                </th>
-                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Поступление
-                                </th>
-                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Остаток (текущее)
-                                </th>
-                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Сумма (₽)
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="item in turnoverData" :key="item.id">
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ item.name }}
-                                    </div>
-                                </td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ item.supplier.name }}</div>
-                                </td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ item.unit_of_measurement }}</div>
-                                </td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ item.start_balance }}</div>
-                                </td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ item.received }}</div>
-                                </td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ item.current_balance }}</div>
-                                </td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ item.total_price }}</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="hidden sm:block overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Имя
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Поставщик
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Ед. изм.
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Остаток на начало
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Поступление
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Остаток (текущее)
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Сумма (₽)
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="item in turnoverData" :key="item.id">
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ item.name }}
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.supplier.name }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.unit_of_measurement }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.start_balance }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.received }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.current_balance }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.total_price }}</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="sm:hidden">
+                        <div v-for="item in turnoverData" :key="item.id" class="bg-white shadow overflow-hidden rounded-lg mb-4 p-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                {{ item.name }}
+                            </h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Поставщик: {{ item.supplier.name }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Ед. изм.: {{ item.unit_of_measurement }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Остаток на начало: {{ item.start_balance }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Поступление: {{ item.received }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Остаток (текущее): {{ item.current_balance }}
+                            </p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Сумма: {{ item.total_price }} ₽
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -447,3 +475,4 @@ h2.active::after {
     }
 }
 </style>
+
