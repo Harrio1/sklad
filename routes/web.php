@@ -73,6 +73,7 @@ Route::middleware([
     Route::get('/get-nomenclature', [NomenclaturesController::class, 'getNomenclatures'])->name('get-nomenclature');
     Route::post('/delete-nomenclature', [NomenclaturesController::class, 'deleteById'])->name('delete-nomenclature');
     Route::post('/update-nomenclature', [NomenclaturesController::class, 'updateById'])->name('update-nomenclature');
+    Route::get('/get-turnover-data', [NomenclaturesController::class, 'getTurnoverData'])->name('get-turnover-data');
 
     // products 
     Route::get('/products', function () {

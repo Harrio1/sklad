@@ -65,4 +65,33 @@ class NomenclaturesController extends Controller
         // Возвращаем успешный ответ
         return Response::json(['status' => 'Номенклатура успешно удалена'], 200);
     }
+
+    public function getTurnoverData()
+    {
+        $turnoverData = Nomenclatures::with('supplier', 'supplies')->get()->map(function ($item) {
+            $startOfWeek = now()->startOfWeek();
+            $endOfWeek = now()->endOfWeek();
+
+            $startBalance = $item->supplies()
+                ->where('supply_date', '<', $startOfWeek)
+                ->sum('quantity');
+
+            $received = $item->supplies()
+                ->whereBetween('supply_date', [$startOfWeek, $endOfWeek])
+                ->sum('quantity');
+
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'supplier' => $item->supplier,
+                'unit_of_measurement' => $item->unit_of_measurement,
+                'start_balance' => $startBalance,
+                'received' => $received,
+                'current_balance' => $item->total_quantity,
+                'total_price' => $item->total_price,
+            ];
+        });
+
+        return response()->json(['turnover' => $turnoverData]);
+    }
 }
