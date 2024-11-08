@@ -14,18 +14,8 @@ class ProductsController extends Controller
     // Метод для получения списка всех продуктов
     public function getProducts()
     {
-        $products = Products::with('nomenclatures')->get();
-        $products->each(function ($product) {
-            try {
-                $product->setCostPrice()->setTotalPrice()->save();
-            } catch (\Exception $e) {
-                $product->fill([
-                    'price' => 0,
-                    'total_price' => 0
-                ])->save();
-            }
-        });
-        return Response::json(['products' => $products], 200);
+        $products = Products::all();
+        return response()->json(['products' => $products], 200);
     }
 
     // Метод для добавления нового продукта
