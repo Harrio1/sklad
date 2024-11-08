@@ -57,9 +57,15 @@ const products = reactive({})
 function getProducts(){
     axios.get(route('products.index'))
         .then(response => {
-            products.value = response.data.products;
+            products.value = response.data.products.map(product => ({
+                ...product,
+                total_price: parseFloat(product.total_price) || 0,
+            }));
             isLoaded.value = true;
     })
+    .catch(error => {
+        console.error('Ошибка при получении продуктов:', error);
+    });
 }
 getProducts();
 
@@ -259,7 +265,7 @@ const editingProduct = ref(null);
                                         <div class="text-sm text-gray-900">{{ item.price }}</div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ item.total_price.toFixed(2) }}</div>
+                                        <div class="text-sm text-gray-900">{{ parseFloat(item.total_price).toFixed(2) }}</div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
                                         <a @click="updateProducts(item.id)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Ред.</a>
@@ -284,7 +290,7 @@ const editingProduct = ref(null);
                                 Себестоимость: {{ item.price }} ₽
                             </p>
                             <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                                Итоговая цена: {{ item.total_price.toFixed(2) }} ₽
+                                Итоговая цена: {{ parseFloat(item.total_price).toFixed(2) }} ₽
                             </p>
                             <div class="mt-2">
                                 <a @click="updateProducts(item.id)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer mr-2">Редактировать</a>

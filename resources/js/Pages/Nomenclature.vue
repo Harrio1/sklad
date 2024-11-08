@@ -2,6 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive, onMounted, watch } from 'vue';
 import axios from 'axios';
+import ExcelJS from 'exceljs';
 
 // Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -149,6 +150,47 @@ const currentTab = ref(localStorage.getItem('currentTab') || 'nomenclature');
 watch(currentTab, (newTab) => {
     localStorage.setItem('currentTab', newTab);
 });
+
+async function downloadExcel() {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Оборотная ведомость');
+
+    // Добавляем заголовки
+    worksheet.columns = [
+        { header: 'Имя', key: 'name', width: 20 },
+        { header: 'Поставщик', key: 'supplier', width: 20 },
+        { header: 'Ед. изм.', key: 'unit', width: 10 },
+        { header: 'Остаток на начало', key: 'start_balance', width: 20 },
+        { header: 'Поступление', key: 'received', width: 15 },
+        { header: 'Остаток (текущее)', key: 'current_balance', width: 20  },
+        { header: 'Сумма (₽)', key: 'total_price', width: 15 }
+    ];
+
+    // Добавляем данные
+    turnoverData.value.forEach(item => {
+        worksheet.addRow({
+            name: item.name,
+            supplier: item.supplier.name,
+            unit: item.unit_of_measurement,
+            start_balance: item.start_balance,
+            received: item.received,
+            current_balance: item.current_balance,
+            total_price: item.total_price
+        });
+    });
+
+    // Получаем текущую дату и форматируем ее
+    const today = new Date();
+    const formattedDate = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+
+    // Генерируем и скачиваем файл
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Оборотная_ведомость_${formattedDate}.xlsx`;
+    link.click();
+}
 </script>
 
 <template>
@@ -308,7 +350,12 @@ watch(currentTab, (newTab) => {
                 </div>
 
                 <div v-if="currentTab === 'turnover'" class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
-                    <h3 class="text-lg font-medium mb-4">Оборотная ведомость</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium">Оборотная ведомость</h3>
+                        <button @click="downloadExcel" class="text-blue-600 hover:text-blue-900">
+                            Скачать как Excel
+                        </button>
+                    </div>
                     <div class="hidden sm:block overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">

@@ -93,5 +93,9 @@ Route::middleware([
     Route::post('/add-products-nomenclatures', [ProductsNomenclatureController::class, 'store'])->name('add-products-nomenclatures');
     Route::post('/update-products-nomenclatures', [ProductsNomenclatureController::class, 'update'])->name('update-products-nomenclatures');
     Route::post('/delete-products-nomenclatures', [ProductsNomenclatureController::class, 'delete'])->name('delete-products-nomenclatures');
-    
+
+    // orders
+    Route::get('/orders', function () {
+        return Inertia::render('Orders');
+    })->name('orders');
 });

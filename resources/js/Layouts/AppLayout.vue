@@ -66,6 +66,9 @@ const logout = () => {
                                 <NavLink :href="route('products_nomenclatures')" :active="route().current('products_nomenclatures')">
                                     Номенклатура продукта
                                 </NavLink>
+                                <NavLink :href="route('orders')" :active="route().current('orders')">
+                                    Заказы
+                                </NavLink>
                             </div>
                         </div>
 
@@ -223,6 +226,9 @@ const logout = () => {
                                 </ResponsiveNavLink>
                                 <ResponsiveNavLink :href="route('products_nomenclatures')" :active="route().current('products_nomenclatures')">
                                     Номенклатура продукта
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink :href="route('orders')" :active="route().current('orders')">
+                                    Заказы
                                 </ResponsiveNavLink>
                     </div>
 
