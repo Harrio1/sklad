@@ -21,5 +21,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/products', [ProductsController::class, 'getProducts'])->name('api.products.index');
-
 Route::post('/orders', [OrdersController::class, 'placeOrder'])->name('api.orders.place');
+Route::get('/orders', [OrdersController::class, 'getOrders']);
+Route::put('/orders/{order}', [OrdersController::class, 'updateOrderStatus']);

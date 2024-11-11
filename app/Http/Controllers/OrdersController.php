@@ -43,4 +43,21 @@ class OrdersController extends Controller
 
         return response()->json(['status' => 'Заказ успешно размещен'], 200);
     }
+
+    public function getOrders()
+    {
+        $orders = Orders::all();
+        return response()->json(['orders' => $orders], 200);
+    }
+    public function updateOrderStatus(Request $request, Orders $order)
+   {
+       $validatedData = $request->validate([
+           'status' => 'required|integer|min:0|max:2',
+       ]);
+
+       $order->status = $validatedData['status'];
+       $order->save();
+
+       return response()->json(['status' => $order->status], 200);
+   }
 }
