@@ -12,7 +12,8 @@ const isLoading = ref(true);
 const isOpenModal = ref(false);
 const messageResponse = ref('');
 const messageResponseColor = ref('');
-const displayMode = ref('single'); // Режим отображения: 'single', 'double', 'compact'
+const displayMode = ref('single');
+const selectedStatuses = ref([]);
 
 // Загрузка продуктов из базы данных
 async function loadProducts() {
@@ -68,8 +69,26 @@ function toggleOrderHistory() {
 
 // Обработчик клика на строку заказа
 function toggleOrderDetails(order) {
+    orders.value.forEach(o => {
+        if (o.id !== order.id) {
+            o.showDetails = false;
+        }
+    });
     order.showDetails = !order.showDetails;
     saveOrderDetailsState();
+}
+
+// Изменение статуса заказа
+function changeOrderStatus(order, newStatus) {
+    axios.post(`/api/orders/${order.id}/status`, { status: newStatus })
+        .then(response => {
+            order.status = response.data.status;
+            openModal('Статус заказа обновлен', 'mgreen');
+        })
+        .catch(error => {
+            console.error('Ошибка при обновлении статуса заказа:', error);
+            openModal('Ошибка при обновлении статуса заказа', 'mred');
+        });
 }
 
 // Инициализация данных
@@ -152,6 +171,103 @@ function closemessageResponse() {
 const totalPrice = computed(() => {
     return cart.value.reduce((total, item) => total + item.quantity * item.total_price, 0);
 });
+
+// Увеличение количества продукта
+const increaseProductQuantity = (productId) => {
+    const product = products.value.find(p => p.id === productId);
+    if (product) {
+        product.quantity += 1;
+        updateCart(product);
+    }
+};
+
+// Уменьшение количества продукта
+const decreaseProductQuantity = (productId) => {
+    const product = products.value.find(p => p.id === productId);
+    if (product && product.quantity > 0) {
+        product.quantity -= 1;
+        updateCart(product);
+    }
+};
+
+// Вспомогательная функция для обновления корзины
+const updateCart = (product) => {
+    const cartItem = cart.value.find(item => item.id === product.id);
+    if (product.quantity > 0) {
+        if (cartItem) {
+            cartItem.quantity = product.quantity;
+        } else {
+            cart.value.push({ ...product });
+        }
+    } else {
+        cart.value = cart.value.filter(item => item.id !== product.id);
+    }
+};
+
+// Для заказов
+const increaseOrderQuantity = (orderId) => {
+    const order = orders.value.find(o => o.id === orderId);
+    if (!order) return;
+
+    const parsedProducts = JSON.parse(order.products);
+    parsedProducts.forEach(product => {
+        product.quantity += 1;
+    });
+
+    axios.post(route('orders.update-quantity'), {
+        order_id: orderId,
+        products: JSON.stringify(parsedProducts)
+    })
+    .then(response => {
+        if (response.data.success) {
+            order.products = JSON.stringify(parsedProducts);
+            orders.value = [...orders.value];
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при обновлении количества:', error);
+    });
+};
+
+const decreaseOrderQuantity = (orderId) => {
+    const order = orders.value.find(o => o.id === orderId);
+    if (!order) return;
+
+    const parsedProducts = JSON.parse(order.products);
+    parsedProducts.forEach(product => {
+        if (product.quantity > 0) {
+            product.quantity -= 1;
+        }
+    });
+
+    axios.post(route('orders.update-quantity'), {
+        order_id: orderId,
+        products: JSON.stringify(parsedProducts)
+    })
+    .then(response => {
+        if (response.data.success) {
+            order.products = JSON.stringify(parsedProducts);
+            orders.value = [...orders.value];
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при обновлении количества:', error);
+    });
+};
+
+// Форматирование даты
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+}
+
+// Фильтрация заказов по статусу
+const filteredOrders = computed(() => {
+    if (selectedStatuses.value.length === 0) {
+        return orders.value;
+    }
+    return orders.value.filter(order => selectedStatuses.value.includes(order.status));
+});
 </script>
 
 <template>
@@ -161,80 +277,107 @@ const totalPrice = computed(() => {
             <div class="loader"></div>
         </div>
         <div v-else class="py-6 sm:py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-medium">Управление заказами</h3>
-                    <div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex">
+                <!-- Боковое меню для фильтрации -->
+                <div class="w-1/4 pr-4">
+                    <div class="bg-white shadow-xl sm:rounded-lg p-4 mb-6">
+                        <h3 class="text-lg font-medium mb-4">Фильтр по статусу</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" v-model="selectedStatuses" :value="0" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
+                                <span class="ml-2 text-gray-700">Отменен</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" v-model="selectedStatuses" :value="1" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
+                                <span class="ml-2 text-gray-700">В процессе</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" v-model="selectedStatuses" :value="2" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
+                                <span class="ml-2 text-gray-700">Завершен</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Основной контент -->
+                <div class="w-3/4">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-medium">Управление заказами</h3>
                         <button @click="toggleOrderHistory" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                             {{ showOrderHistory ? 'Вернуться к продуктам' : 'История заказов' }}
                         </button>
-                        <button @click="toggleDisplayMode" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                    </div>
+
+                    <div v-if="showOrderHistory" class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+                        <h3 class="text-lg font-medium mb-4">История заказов</h3>
+                        <button @click="toggleDisplayMode" class="mb-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
                             Переключить режим
                         </button>
-                    </div>
-                </div>
-
-                <div v-if="showOrderHistory" :class="{'grid grid-cols-1': displayMode === 'single', 'grid grid-cols-2 gap-4': displayMode === 'double', 'grid grid-cols-3 gap-2': displayMode === 'compact'}" class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-                    <h3 class="text-lg font-medium mb-4">История заказов</h3>
-                    <div v-for="order in orders" :key="order.id" 
-                         @click="toggleOrderDetails(order)" 
-                         class="mb-4 p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-100">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <span class="font-bold">Заказ #{{ order.id }}</span>
-                                <span :class="{
-                                    'bg-red-100 text-red-500': order.status === 0,
-                                    'bg-blue-100 text-blue-500': order.status === 1,
-                                    'bg-green-100 text-green-500': order.status === 2
-                                }" class="px-2 py-1 rounded-full ml-2">
-                                    {{ order.status === 0 ? 'Отменен' : order.status === 1 ? 'В процессе' : 'Завершен' }}
-                                </span>
-                            </div>
-                        </div>
-                        <div v-if="order.showDetails" class="mt-2">
-                            <ul>
-                                <li v-for="item in JSON.parse(order.products)" :key="item.id">
-                                    {{ item.name }} - {{ item.quantity }} шт.
-                                </li>
-                            </ul>
-                            <div class="mt-2">
-                                <button v-if="order.status !== 0" @click.stop="changeOrderStatus(order, 0)" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">Отменить</button>
-                                <button v-if="order.status !== 1" @click.stop="changeOrderStatus(order, 1)" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 ml-2">В процессе</button>
-                                <button v-if="order.status !== 2" @click.stop="changeOrderStatus(order, 2)" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 ml-2">Завершить</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-else>
-                    <!-- Список продуктов -->
-                    <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6 mb-6">
-                        <h3 class="text-lg font-medium mb-4">Список продуктов</h3>
-                        <div v-for="product in products" :key="product.id" class="flex justify-between items-center mb-4 p-4 border-b border-gray-200">
-                            <div class="text-gray-700 font-semibold">{{ product.name }} - {{ product.total_price.toFixed(2) }} ₽</div>
-                            <div class="flex items-center">
-                                <button @click="decreaseQuantity(product)" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">-</button>
-                                <span class="mx-3 text-gray-700">{{ product.quantity }}</span>
-                                <button @click="increaseQuantity(product)" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">+</button>
+                        <div :class="{'grid grid-cols-1': displayMode === 'single', 'grid grid-cols-2 gap-4': displayMode === 'double', 'grid grid-cols-3 gap-2': displayMode === 'compact'}">
+                            <div v-for="order in filteredOrders" :key="order.id" 
+                                 @click="toggleOrderDetails(order)" 
+                                 class="cursor-pointer p-4 border-b border-gray-200">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="font-semibold">Заказ #{{ order.id }}</span>
+                                        <span class="ml-2 text-sm text-gray-500">{{ formatDate(order.created_at) }}</span>
+                                    </div>
+                                    <span :class="{'text-green-500': order.status === 2, 'text-blue-500': order.status === 1, 'text-red-500': order.status === 0}">
+                                        {{ order.status === 2 ? 'Завершен' : order.status === 1 ? 'В процессе' : 'Отменен' }}
+                                    </span>
+                                </div>
+                                <div v-if="order.showDetails" class="mt-2">
+                                    <ul>
+                                        <li v-for="item in JSON.parse(order.products)" :key="item.id" class="flex justify-between items-center mb-2">
+                                            <span class="font-bold">{{ item.name }} - {{ item.quantity }}</span>
+                                            <span>{{ (item.quantity * item.total_price).toFixed(2) }} ₽</span>
+                                        </li>
+                                    </ul>
+                                    <hr class="my-2">
+                                    <div class="flex justify-between items-center mt-2">
+                                        <span class="font-semibold">Итого:</span>
+                                        <span class="font-bold">{{ JSON.parse(order.products).reduce((total, item) => total + item.quantity * item.total_price, 0).toFixed(2) }} ₽</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button v-if="order.status !== 0" @click.stop="changeOrderStatus(order, 0)" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">Отменить</button>
+                                        <button v-if="order.status !== 1" @click.stop="changeOrderStatus(order, 1)" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 ml-2">В процессе</button>
+                                        <button v-if="order.status !== 2" @click.stop="changeOrderStatus(order, 2)" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 ml-2">Завершить</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Корзина заказа -->
-                    <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-                        <h3 class="text-lg font-medium mb-4">Корзина заказа</h3>
-                        <div v-for="item in cart" :key="item.id" 
-                             class="flex justify-between items-center mb-2 p-2 border-b border-gray-200">
-                            <div>{{ item.name }} - {{ item.quantity }} x {{ item.total_price.toFixed(2) }} ₽</div>
-                            <div>{{ (item.quantity * item.total_price).toFixed(2) }} ₽</div>
+                    <div v-else>
+                        <!-- Список продуктов -->
+                        <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-medium mb-4">Список продуктов</h3>
+                            <div v-for="product in products" :key="product.id" class="flex justify-between items-center mb-4 p-4 border-b border-gray-200">
+                                <div class="text-gray-700 font-semibold">{{ product.name }} - {{ product.total_price.toFixed(2) }} ₽</div>
+                                <div class="flex items-center">
+                                    <button @click="decreaseProductQuantity(product.id)" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">-</button>
+                                    <span class="mx-3 text-gray-700">{{ product.quantity }}</span>
+                                    <button @click="increaseProductQuantity(product.id)" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">+</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center mt-4">
-                            <div class="text-lg font-semibold">Итого:</div>
-                            <div class="text-lg font-semibold">{{ totalPrice.toFixed(2) }} ₽</div>
+
+                        <!-- Корзина заказа -->
+                        <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+                            <h3 class="text-lg font-medium mb-4">Корзина заказа</h3>
+                            <div v-for="item in cart" :key="item.id" 
+                                 class="flex justify-between items-center mb-2 p-2 border-b border-gray-200">
+                                <div>{{ item.name }} - {{ item.quantity }} x {{ item.total_price.toFixed(2) }} ₽</div>
+                                <div>{{ (item.quantity * item.total_price).toFixed(2) }} ₽</div>
+                            </div>
+                            <div class="flex justify-between items-center mt-4">
+                                <div class="text-lg font-semibold">Итого:</div>
+                                <div class="text-lg font-semibold">{{ totalPrice.toFixed(2) }} ₽</div>
+                            </div>
+                            <button @click="placeOrder" class="mt-6 w-full sm:w-auto inline-flex justify-center py-3 px-6 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Заказать
+                            </button>
                         </div>
-                        <button @click="placeOrder" class="mt-6 w-full sm:w-auto inline-flex justify-center py-3 px-6 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Заказать
-                        </button>
                     </div>
                 </div>
             </div>

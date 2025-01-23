@@ -24,3 +24,4 @@ Route::get('/products', [ProductsController::class, 'getProducts'])->name('api.p
 Route::post('/orders', [OrdersController::class, 'placeOrder'])->name('api.orders.place');
 Route::get('/orders', [OrdersController::class, 'getOrders']);
 Route::put('/orders/{order}', [OrdersController::class, 'updateOrderStatus']);
+Route::post('/orders/{order}/status', [OrdersController::class, 'updateStatus']);

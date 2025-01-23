@@ -9,6 +9,7 @@ use App\Http\Controllers\NomenclaturesController;
 use App\Http\Controllers\SuppliesController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\ProductsNomenclatureController;
+use App\Http\Controllers\OrdersController;
 
 /*
 |--------------------------------------------------------------------------
@@ -98,4 +99,7 @@ Route::middleware([
     Route::get('/orders', function () {
         return Inertia::render('Orders');
     })->name('orders');
+
+    Route::post('/orders/update-quantity', [OrdersController::class, 'updateQuantity'])->name('orders.update-quantity');
+    Route::get('/api/orders', [OrdersController::class, 'getOrders'])->name('orders.get');
 });

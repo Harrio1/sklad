@@ -60,4 +60,39 @@ class OrdersController extends Controller
 
        return response()->json(['status' => $order->status], 200);
    }
+
+   public function updateQuantity(Request $request)
+   {
+       $validated = $request->validate([
+           'order_id' => 'required|exists:orders,id',
+           'products' => 'required|json'
+       ]);
+
+       $order = Orders::findOrFail($request->order_id);
+       $order->products = $request->products;
+       
+       // Подсчитываем общее количество
+       $products = json_decode($request->products, true);
+       $totalQuantity = array_sum(array_column($products, 'quantity'));
+       $order->quantity = $totalQuantity;
+       
+       $order->save();
+
+       return response()->json([
+           'success' => true,
+           'order' => $order
+       ]);
+   }
+
+   public function updateStatus(Request $request, Orders $order)
+   {
+       $validated = $request->validate([
+           'status' => 'required|integer|in:0,1,2',
+       ]);
+
+       $order->status = $validated['status'];
+       $order->save();
+
+       return response()->json(['status' => $order->status], 200);
+   }
 }
