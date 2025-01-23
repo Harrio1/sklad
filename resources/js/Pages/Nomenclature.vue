@@ -201,14 +201,14 @@ async function downloadExcel() {
                 <h2 
                     @click="currentTab = 'nomenclature'" 
                     :class="{ active: currentTab === 'nomenclature' }"
-                    class="font-semibold text-xl text-gray-800 leading-tight cursor-pointer"
+                    class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight cursor-pointer"
                 >
                     Номенклатура
                 </h2>
                 <h2 
                     @click="currentTab = 'turnover'" 
                     :class="{ active: currentTab === 'turnover' }"
-                    class="font-semibold text-xl text-gray-800 leading-tight cursor-pointer"
+                    class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight cursor-pointer"
                 >
                     Оборотная ведомость
                 </h2>
@@ -218,21 +218,21 @@ async function downloadExcel() {
         <div class="py-6 sm:py-12" v-if="!isLoading">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div v-if="currentTab === 'nomenclature'">
-                    <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mb-6">
-                        <h3 class="text-lg font-medium mb-4">Добавить новую номенклатуру</h3>
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mb-6">
+                        <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Добавить новую номенклатуру</h3>
                         <form>
                             <input type="hidden" name="_token" :value="csrf">
 
                             <div class="mb-4">
-                                <label for="name" class="block text-sm font-medium text-gray-700">Имя</label>
+                                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Имя</label>
                                 <input type="text" id="name" v-model="form.name" required
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
                             </div>
 
                             <div class="mb-4">
-                                <label for="supplier" class="block text-sm font-medium text-gray-700">Поставщик</label>
+                                <label for="supplier" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Поставщик</label>
                                 <select id="supplier" v-model="form.suppliers_id" required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                                        class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
                                     <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
                                         {{ supplier.name }}
                                     </option>
@@ -240,9 +240,9 @@ async function downloadExcel() {
                             </div>
 
                             <div class="mb-4">
-                                <label for="unit_of_measurement" class="block text-sm font-medium text-gray-700">Единица измерения</label>
+                                <label for="unit_of_measurement" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Единица измерения</label>
                                 <select id="unit_of_measurement" v-model="form.unit_of_measurement" required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                                        class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
                                     <option v-for="unit in units" :key="unit" :value="unit">
                                         {{ unit }}
                                     </option>
@@ -250,10 +250,10 @@ async function downloadExcel() {
                             </div>
 
                             <div class="mb-4">
-                                <label for="price_per_unit" class="block text-sm font-medium text-gray-700">Цена за единицу (₽)</label>
+                                <label for="price_per_unit" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Цена за единицу (₽)</label>
                                 <input type="number" id="price_per_unit" v-model="form.price_per_unit" 
                                     :step="priceStep" required
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
                             </div>
 
                             <button type="submit" @click.prevent="responseNomenclature"
@@ -263,56 +263,56 @@ async function downloadExcel() {
                         </form>
                     </div>
 
-                    <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
-                        <h3 class="text-lg font-medium mb-4">Список номенклатуры</h3>
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
+                        <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Список номенклатуры</h3>
                         <div class="hidden sm:block overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Имя
                                         </th>
-                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Поставщик
                                         </th>
-                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Ед. изм.
                                         </th>
-                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Цена (₽)
                                         </th>
-                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Кол-во
                                         </th>
-                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Сумма (₽)
                                         </th>
-                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Действие
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                     <tr v-for="item in nomenclature.value" :key="item.id">
                                         <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-200">
                                                 {{ item.name }}
                                             </div>
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ item.supplier.name }}</div>
+                                            <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.supplier.name }}</div>
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ item.unit_of_measurement }}</div>
+                                            <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.unit_of_measurement }}</div>
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ item.price_per_unit }}</div>
+                                            <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.price_per_unit }}</div>
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ item.total_quantity }}</div>
+                                            <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.total_quantity }}</div>
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ item.total_price }}</div>
+                                            <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.total_price }}</div>
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
                                             <a @click="deleteNomenclature(item.id)" :data="item.id" class="text-red-600 hover:text-red-900">Удалить</a>
@@ -322,23 +322,23 @@ async function downloadExcel() {
                             </table>
                         </div>
                         <div class="sm:hidden">
-                            <div v-for="item in nomenclature.value" :key="item.id" class="bg-white shadow overflow-hidden rounded-lg mb-4 p-4">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                            <div v-for="item in nomenclature.value" :key="item.id" class="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg mb-4 p-4">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-200">
                                     {{ item.name }}
                                 </h3>
-                                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                     Поставщик: {{ item.supplier.name }}
                                 </p>
-                                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                     Ед. изм.: {{ item.unit_of_measurement }}
                                 </p>
-                                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                     Цена: {{ item.price_per_unit }} ₽
                                 </p>
-                                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                     Количество: {{ item.total_quantity }}
                                 </p>
-                                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                     Сумма: {{ item.total_price }} ₽
                                 </p>
                                 <div class="mt-2">
@@ -349,90 +349,90 @@ async function downloadExcel() {
                     </div>
                 </div>
 
-                <div v-if="currentTab === 'turnover'" class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
+                <div v-if="currentTab === 'turnover'" class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Оборотная ведомость</h3>
+                        <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">Оборотная ведомость</h3>
                         <button @click="downloadExcel" class="text-blue-600 hover:text-blue-900">
                             Скачать как Excel
                         </button>
                     </div>
                     <div class="hidden sm:block overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900">
                                 <tr>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Имя
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Поставщик
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Ед. изм.
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Остаток на начало
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Поступление
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Остаток (текущее)
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Сумма (₽)
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 <tr v-for="item in turnoverData" :key="item.id">
                                     <td class="px-3 py-2 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-200">
                                             {{ item.name }}
                                         </div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ item.supplier.name }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.supplier.name }}</div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ item.unit_of_measurement }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.unit_of_measurement }}</div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ item.start_balance }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.start_balance }}</div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ item.received }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.received }}</div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ item.current_balance }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.current_balance }}</div>
                                     </td>
                                     <td class="px-3 py-2 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ item.total_price }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.total_price }}</div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="sm:hidden">
-                        <div v-for="item in turnoverData" :key="item.id" class="bg-white shadow overflow-hidden rounded-lg mb-4 p-4">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <div v-for="item in turnoverData" :key="item.id" class="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg mb-4 p-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-200">
                                 {{ item.name }}
                             </h3>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                 Поставщик: {{ item.supplier.name }}
                             </p>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                 Ед. изм.: {{ item.unit_of_measurement }}
                             </p>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                 Остаток на начало: {{ item.start_balance }}
                             </p>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                 Поступление: {{ item.received }}
                             </p>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                 Остаток (текущее): {{ item.current_balance }}
                             </p>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                 Сумма: {{ item.total_price }} ₽
                             </p>
                         </div>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
@@ -13,6 +13,21 @@ defineProps({
 });
 
 const showingNavigationDropdown = ref(false);
+const theme = ref(localStorage.getItem('theme') || 'light');
+const isDarkMode = ref(theme.value === 'dark');
+
+// Watch for changes in theme and update body class
+watch(theme, (newTheme) => {
+    document.body.classList.toggle('dark', newTheme === 'dark');
+    localStorage.setItem('theme', newTheme);
+});
+
+// Function to toggle theme
+const toggleTheme = () => {
+    theme.value = theme.value === 'light' ? 'dark' : 'light';
+    isDarkMode.value = !isDarkMode.value;
+    document.documentElement.classList.toggle('dark', isDarkMode.value);
+};
 
 const switchToTeam = (team) => {
     router.put(route('current-team.update'), {
@@ -28,45 +43,45 @@ const logout = () => {
 </script>
 
 <template>
-    <div>
+    <div :class="{ 'dark': isDarkMode }">
         <Head :title="title" />
 
         <Banner />
 
-        <div class="min-h-screen bg-gray-100">
-            <nav class="bg-white border-b border-gray-100">
+        <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+            <nav class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-gray-800 dark:to-gray-900 shadow-lg">
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
                         <div class="flex">
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
-                                <Link :href="route('dashboard')">
+                                <Link :href="route('dashboard')" class="text-white text-xl font-bold">
                                     Фабрика
                                 </Link>
                             </div>
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')" class="text-white hover:text-gray-200">
                                     Главная
                                 </NavLink>
-                                <NavLink :href="route('suppliers')" :active="route().current('suppliers')">
+                                <NavLink :href="route('suppliers')" :active="route().current('suppliers')" class="text-white hover:text-gray-200">
                                     Поставщики
                                 </NavLink>
-                                <NavLink :href="route('nomenclature')" :active="route().current('nomenclature')">
+                                <NavLink :href="route('nomenclature')" :active="route().current('nomenclature')" class="text-white hover:text-gray-200">
                                     Номенклатура
-                                </NavLink>                                
-                                <NavLink :href="route('supplies')" :active="route().current('supplies')">
+                                </NavLink>
+                                <NavLink :href="route('supplies')" :active="route().current('supplies')" class="text-white hover:text-gray-200">
                                     Поставки
                                 </NavLink>
-                                <NavLink :href="route('products')" :active="route().current('products')">
+                                <NavLink :href="route('products')" :active="route().current('products')" class="text-white hover:text-gray-200">
                                     Продукты
                                 </NavLink>
-                                <NavLink :href="route('products_nomenclatures')" :active="route().current('products_nomenclatures')">
+                                <NavLink :href="route('products_nomenclatures')" :active="route().current('products_nomenclatures')" class="text-white hover:text-gray-200">
                                     Номенклатура продукта
                                 </NavLink>
-                                <NavLink :href="route('orders')" :active="route().current('orders')">
+                                <NavLink :href="route('orders')" :active="route().current('orders')" class="text-white hover:text-gray-200">
                                     Заказы
                                 </NavLink>
                             </div>
@@ -78,7 +93,7 @@ const logout = () => {
                                 <Dropdown v-if="$page.props.jetstream.hasTeamFeatures" align="right" width="60">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
-                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
+                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700 active:bg-indigo-700 transition ease-in-out duration-150">
                                                 {{ $page.props.auth.user.current_team.name }}
 
                                                 <svg class="ms-2 -me-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -140,7 +155,7 @@ const logout = () => {
                                         </button>
 
                                         <span v-else class="inline-flex rounded-md">
-                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
+                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700 active:bg-indigo-700 transition ease-in-out duration-150">
                                                 {{ $page.props.auth.user.name }}
 
                                                 <svg class="ms-2 -me-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -151,27 +166,33 @@ const logout = () => {
                                     </template>
 
                                     <template #content>
-                                        <!-- Account Management -->
-                                        <div class="block px-4 py-2 text-xs text-gray-400">
-                                            Настройки
+                                        <div class="rounded-md ring-1 ring-black ring-opacity-5 py-1 bg-white dark:bg-gray-800">
+                                            <div class="bg-white dark:bg-gray-800 rounded-md shadow-lg overflow-hidden">
+                                                <!-- Account Management -->
+                                                <div class="block px-4 py-2 text-xs text-gray-400 dark:text-gray-300">
+                                                    Настройки
+                                                </div>
+
+                                                <DropdownLink :href="route('profile.show')" class="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                    Профиль
+                                                </DropdownLink>
+
+                                                <DropdownLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')" class="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                    API Tokens
+                                                </DropdownLink>
+
+                                                <button @click="toggleTheme" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                    {{ isDarkMode ? 'Светлая тема' : 'Темная тема' }}
+                                                </button>
+
+                                                <!-- Authentication -->
+                                                <form @submit.prevent="logout">
+                                                    <DropdownLink as="button" class="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                        Выход
+                                                    </DropdownLink>
+                                                </form>
+                                            </div>
                                         </div>
-
-                                        <DropdownLink :href="route('profile.show')">
-                                            Профиль
-                                        </DropdownLink>
-
-                                        <DropdownLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')">
-                                            API Tokens
-                                        </DropdownLink>
-
-                                        <div class="border-t border-gray-200" />
-
-                                        <!-- Authentication -->
-                                        <form @submit.prevent="logout">
-                                            <DropdownLink as="button">
-                                                Выход
-                                            </DropdownLink>
-                                        </form>
                                     </template>
                                 </Dropdown>
                             </div>
@@ -179,7 +200,7 @@ const logout = () => {
 
                         <!-- Hamburger -->
                         <div class="-me-2 flex items-center sm:hidden">
-                            <button class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out" @click="showingNavigationDropdown = ! showingNavigationDropdown">
+                            <button class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-gray-200 hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700 focus:text-white transition duration-150 ease-in-out" @click="showingNavigationDropdown = ! showingNavigationDropdown">
                                 <svg
                                     class="h-6 w-6"
                                     stroke="currentColor"
@@ -209,27 +230,27 @@ const logout = () => {
                 <!-- Responsive Navigation Menu -->
                 <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden">
                     <div class="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')" class="text-white hover:bg-indigo-700">
                             Dashboard
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('suppliers')" :active="route().current('suppliers')">
-                                    Поставщики
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink :href="route('nomenclature')" :active="route().current('nomenclature')">
-                                    Номенклатура
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink :href="route('supplies')" :active="route().current('supplies')">
-                                    Поставки
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink :href="route('products')" :active="route().current('products')">
-                                    Продукты
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink :href="route('products_nomenclatures')" :active="route().current('products_nomenclatures')">
-                                    Номенклатура продукта
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink :href="route('orders')" :active="route().current('orders')">
-                                    Заказы
-                                </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('suppliers')" :active="route().current('suppliers')" class="text-white hover:bg-indigo-700">
+                            Поставщики
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('nomenclature')" :active="route().current('nomenclature')" class="text-white hover:bg-indigo-700">
+                            Номенклатура
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('supplies')" :active="route().current('supplies')" class="text-white hover:bg-indigo-700">
+                            Поставки
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('products')" :active="route().current('products')" class="text-white hover:bg-indigo-700">
+                            Продукты
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('products_nomenclatures')" :active="route().current('products_nomenclatures')" class="text-white hover:bg-indigo-700">
+                            Номенклатура продукта
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('orders')" :active="route().current('orders')" class="text-white hover:bg-indigo-700">
+                            Заказы
+                        </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
@@ -250,17 +271,17 @@ const logout = () => {
                         </div>
 
                         <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.show')" :active="route().current('profile.show')">
+                            <ResponsiveNavLink :href="route('profile.show')" :active="route().current('profile.show')" class="text-white hover:bg-indigo-700">
                                 Profile
                             </ResponsiveNavLink>
 
-                            <ResponsiveNavLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')" :active="route().current('api-tokens.index')">
+                            <ResponsiveNavLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')" :active="route().current('api-tokens.index')" class="text-white hover:bg-indigo-700">
                                 API Tokens
                             </ResponsiveNavLink>
 
                             <!-- Authentication -->
                             <form method="POST" @submit.prevent="logout">
-                                <ResponsiveNavLink as="button">
+                                <ResponsiveNavLink as="button" class="text-white hover:bg-indigo-700">
                                     Log Out
                                 </ResponsiveNavLink>
                             </form>
@@ -274,11 +295,11 @@ const logout = () => {
                                 </div>
 
                                 <!-- Team Settings -->
-                                <ResponsiveNavLink :href="route('teams.show', $page.props.auth.user.current_team)" :active="route().current('teams.show')">
+                                <ResponsiveNavLink :href="route('teams.show', $page.props.auth.user.current_team)" :active="route().current('teams.show')" class="text-white hover:bg-indigo-700">
                                     Team Settings
                                 </ResponsiveNavLink>
 
-                                <ResponsiveNavLink v-if="$page.props.jetstream.canCreateTeams" :href="route('teams.create')" :active="route().current('teams.create')">
+                                <ResponsiveNavLink v-if="$page.props.jetstream.canCreateTeams" :href="route('teams.create')" :active="route().current('teams.create')" class="text-white hover:bg-indigo-700">
                                     Create New Team
                                 </ResponsiveNavLink>
 
@@ -292,7 +313,7 @@ const logout = () => {
 
                                     <template v-for="team in $page.props.auth.user.all_teams" :key="team.id">
                                         <form @submit.prevent="switchToTeam(team)">
-                                            <ResponsiveNavLink as="button">
+                                            <ResponsiveNavLink as="button" class="text-white hover:bg-indigo-700">
                                                 <div class="flex items-center">
                                                     <svg v-if="team.id == $page.props.auth.user.current_team_id" class="me-2 h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

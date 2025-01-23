@@ -177,22 +177,22 @@ function getQuantityStep(unit) {
     <AppLayout title="Продукты номенклатуры">
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Продукты номенклатуры
             </h2>
         </template>
 
         <div class="py-6 sm:py-12" v-if="!isLoading">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mb-6">
-                    <h3 class="text-lg font-medium mb-4">Добавление номенклатуры к продукту</h3>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mb-6">
+                    <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Добавление номенклатуры к продукту</h3>
                     <form @submit.prevent="submitForm">
                         <input type="hidden" name="_token" :value="csrf">
 
                         <div class="mb-4">
-                            <label for="product" class="block text-sm font-medium text-gray-700">Продукт</label>
+                            <label for="product" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Продукт</label>
                             <select id="product" v-model="form.product_id" required
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
                                 <option value="">Выберите продукт</option>
                                 <option v-for="product in products" :key="product.id" :value="product.id">
                                     {{ product.name }}
@@ -200,22 +200,22 @@ function getQuantityStep(unit) {
                             </select>
                         </div>
 
-                        <table class="min-w-full divide-y divide-gray-200 mb-4">
-                            <thead>
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 mb-4">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
                                 <tr>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Номенклатура</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Количество</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Цена (₽)</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Действие</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Номенклатура</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Количество</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Цена (₽)</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Действие</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 <tr v-for="(nomenclature, index) in form.nomenclatures" :key="index">
                                     <td class="px-3 py-2">
                                         <select v-model="nomenclature.id"
                                                 @change="updateNomenclatureDetails(nomenclature)"
                                                 required
-                                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                                                class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
                                             <option :value="null">Выберите номенклатуру</option>
                                             <option v-for="n in availableNomenclatures" 
                                                     :key="n.id" 
@@ -231,16 +231,16 @@ function getQuantityStep(unit) {
                                                @input="updateNomenclatureDetails(nomenclature)"
                                                required 
                                                :step="getQuantityStep(nomenclature.unit)"
-                                               class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                                               class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
                                     </td>
                                     <td class="px-3 py-2">
                                         <input type="number" 
                                                v-model.number="nomenclature.price"
                                                readonly
-                                               class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                                               class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
                                     </td>
                                     <td class="px-3 py-2">
-                                        <button type="button" @click="removeNomenclatureLine(index)" class="text-red-600 hover:text-red-900">
+                                        <button type="button" @click="removeNomenclatureLine(index)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-500">
                                             Удалить
                                         </button>
                                     </td>
@@ -250,7 +250,7 @@ function getQuantityStep(unit) {
 
                         <button type="button" @click="addNomenclatureLine" 
                                 :disabled="!canAddNomenclatureLine"
-                                class="mb-4 text-blue-600 hover:text-blue-900" 
+                                class="mb-4 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-500" 
                                 :class="{ 'opacity-50 cursor-not-allowed': !canAddNomenclatureLine }">
                             + Добавить номенклатуру
                         </button>
@@ -262,37 +262,37 @@ function getQuantityStep(unit) {
                     </form>
                 </div>
 
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mt-6">
-                    <h3 class="text-lg font-medium mb-4">Список связей продуктов и номенклатуры</h3>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mt-6">
+                    <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Список связей продуктов и номенклатуры</h3>
                     <!-- Таблица для десктопной версии -->
                     <div class="hidden sm:block overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900">
                                 <tr>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Продукт</th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Номенклатура</th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Количество</th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена (₽)</th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действие</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Продукт</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Номенклатура</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Количество</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Цена (₽)</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Действие</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 <template v-for="product in productsNomenclatures" :key="product.id">
                                     <tr v-for="nomenclature in product.nomenclatures" :key="nomenclature.id">
-                                        <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
+                                        <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-gray-200">
+                                            <div class="text-sm font-medium">{{ product.name }}</div>
                                         </td>
-                                        <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ nomenclature.name }}</div>
+                                        <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-gray-200">
+                                            <div class="text-sm">{{ nomenclature.name }}</div>
                                         </td>
-                                        <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ nomenclature.pivot.quantity }}</div>
+                                        <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-gray-200">
+                                            <div class="text-sm">{{ nomenclature.pivot.quantity }}</div>
                                         </td>
-                                        <td class="px-3 py-2 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ calculateTotalPrice(nomenclature) }}</div>
+                                        <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-gray-200">
+                                            <div class="text-sm">{{ calculateTotalPrice(nomenclature) }}</div>
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
-                                            <a @click="deleteProductNomenclature(product.id, nomenclature.id)" class="text-red-600 hover:text-red-900 cursor-pointer">Удал.</a>
+                                            <a @click="deleteProductNomenclature(product.id, nomenclature.id)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-500 cursor-pointer">Удалить</a>
                                         </td>
                                     </tr>
                                 </template>
@@ -302,13 +302,13 @@ function getQuantityStep(unit) {
                     <!-- Мобильное представление -->
                     <div class="sm:hidden">
                         <div v-for="product in productsNomenclatures" :key="product.id" class="mb-6">
-                            <h4 class="text-lg font-medium text-gray-900 mb-2">{{ product.name }}</h4>
-                            <div v-for="nomenclature in product.nomenclatures" :key="nomenclature.id" class="bg-white shadow overflow-hidden sm:rounded-lg mb-4 p-4">
-                                <p class="text-sm font-medium text-gray-500">Номенклатура: <span class="text-gray-900">{{ nomenclature.name }}</span></p>
-                                <p class="text-sm font-medium text-gray-500 mt-1">Количество: <span class="text-gray-900">{{ nomenclature.pivot.quantity }}</span></p>
-                                <p class="text-sm font-medium text-gray-500 mt-1">Цена: <span class="text-gray-900">{{ calculateTotalPrice(nomenclature) }} ₽</span></p>
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-gray-200 mb-2">{{ product.name }}</h4>
+                            <div v-for="nomenclature in product.nomenclatures" :key="nomenclature.id" class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mb-4 p-4">
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Номенклатура: <span class="text-gray-900 dark:text-gray-200">{{ nomenclature.name }}</span></p>
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">Количество: <span class="text-gray-900 dark:text-gray-200">{{ nomenclature.pivot.quantity }}</span></p>
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">Цена: <span class="text-gray-900 dark:text-gray-200">{{ calculateTotalPrice(nomenclature) }} ₽</span></p>
                                 <div class="mt-2">
-                                    <a @click="deleteProductNomenclature(product.id, nomenclature.id)" class="text-red-600 hover:text-red-900 cursor-pointer">Удалить</a>
+                                    <a @click="deleteProductNomenclature(product.id, nomenclature.id)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-500 cursor-pointer">Удалить</a>
                                 </div>
                             </div>
                         </div>
@@ -326,18 +326,18 @@ function getQuantityStep(unit) {
 .modalMessage {
     position: fixed;
     top: 10%;
-    right: -100%; /* Начальная позиция за пределами экрана */
+    right: -100%;
     border: 1px solid #ccc;
     box-shadow: 0px 0px 20px #444;
-    background-color: rgba(0, 95, 13, 0.9); /* Более мягкий цвет */
+    background-color: rgba(0, 95, 13, 0.9);
     padding: 20px 40px;
     color: #fff;
-    transition: right 0.5s ease; /* Анимация появления */
+    transition: right 0.5s ease;
     z-index: 1000;
 }
 
 .modalMessage.show {
-    right: 0%; /* Конечная позиция на экране */
+    right: 0%;
 }
 
 .mgreen {

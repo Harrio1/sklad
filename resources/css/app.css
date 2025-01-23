@@ -88,3 +88,7 @@ a {
 hr {
     margin: 20px 0 ;
 }
+
+.dark .bg-white {
+    background-color: #1f2937; /* Пример темного цвета */
+}

@@ -168,44 +168,44 @@ function deleteSupply(supplyId) {
     <AppLayout title="Supplies">
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Поставки
             </h2>
         </template>
 
         <div v-if="!isLoading" class="py-6 sm:py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
-                    <h3 class="text-lg font-medium mb-4">{{ isEdit ? 'Редактировать поставку' : 'Добавить новую поставку' }}</h3>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
+                    <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">{{ isEdit ? 'Редактировать поставку' : 'Добавить новую поставку' }}</h3>
                     <form @submit.prevent>
                         <div class="mb-4">
-                            <label for="nomenclatureId" class="block text-sm font-medium text-gray-700">Номенклатура</label>
+                            <label for="nomenclatureId" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Номенклатура</label>
                             <select id="nomenclatureId" v-model="form.nomenclatureId" required
                                     @change="updateNomenclatureDetails(form.nomenclatureId)"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500">
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
                                 <option v-for="item in nomenclatures" :key="item.id" :value="item.id">{{ item.name }}</option>
                             </select>
                         </div>
 
                         <div class="mb-4">
-                            <label for="supplyDate" class="block text-sm font-medium text-gray-700">Дата поставки</label>
+                            <label for="supplyDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Дата поставки</label>
                             <input type="date" id="supplyDate" v-model="form.supplyDate" required
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                                   class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
                         </div>
-                        
+
                         <div class="mb-4">
-                            <label for="quantity" class="block text-sm font-medium text-gray-700">Количество</label>
+                            <label for="quantity" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Количество</label>
                             <input type="number" id="quantity" v-model="form.quantity" 
                                    :step="isWholeNumber(form.unit) ? 1 : 0.01"
                                    @input="validateQuantity(form)"
                                    required
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                                   class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
                         </div>
 
                         <div class="mb-4">
-                            <label for="totalPrice" class="block text-sm font-medium text-gray-700">Общая цена (₽)</label>
+                            <label for="totalPrice" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Общая цена (₽)</label>
                             <input type="text" id="totalPrice" :value="totalPrice.toFixed(2)" readonly
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500" />
+                                   class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
                         </div>
 
                         <button v-if="!isEdit" type="submit" @click.prevent="addSupply()"
@@ -219,29 +219,29 @@ function deleteSupply(supplyId) {
                     </form>
                 </div>
 
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mt-5">
-                    <h3 class="text-lg font-medium mb-4">Список поставок</h3>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mt-5">
+                    <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Список поставок</h3>
                     <!-- Таблица для десктопной версии -->
                     <div class="hidden sm:block overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900">
                                 <tr>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Номенклатура</th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Количество</th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена (₽)</th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Номенклатура</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Дата</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Количество</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Цена (₽)</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Действия</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 <tr v-for="supply in supplies" :key="supply.id">
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ supply.nomenclature.name }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ supply.supply_date }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ supply.quantity }} {{ supply.unit }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ supply.price }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-gray-200">{{ supply.nomenclature.name }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-gray-200">{{ supply.supply_date }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-gray-200">{{ supply.quantity }} {{ supply.unit }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-gray-200">{{ supply.price }}</td>
                                     <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
-                                        <a @click="editSupply(supply)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Редактировать</a>
-                                        <a @click="deleteSupply(supply.id)" class="ml-2 text-red-600 hover:text-red-900 cursor-pointer">Удалить</a>
+                                        <a @click="editSupply(supply)" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-500 cursor-pointer">Редактировать</a>
+                                        <a @click="deleteSupply(supply.id)" class="ml-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-500 cursor-pointer">Удалить</a>
                                     </td>
                                 </tr>
                             </tbody>
@@ -249,22 +249,22 @@ function deleteSupply(supplyId) {
                     </div>
                     <!-- Мобильное представление -->
                     <div class="sm:hidden">
-                        <div v-for="supply in supplies" :key="supply.id" class="bg-white shadow overflow-hidden sm:rounded-lg mb-4 p-4">
-                            <h4 class="text-lg leading-6 font-medium text-gray-900">
+                        <div v-for="supply in supplies" :key="supply.id" class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mb-4 p-4">
+                            <h4 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-200">
                                 {{ supply.nomenclature.name }}
                             </h4>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                 Дата: {{ supply.supply_date }}
                             </p>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                 Количество: {{ supply.quantity }} {{ supply.unit }}
                             </p>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
                                 Цена: {{ supply.price }} ₽
                             </p>
                             <div class="mt-2">
-                                <a @click="editSupply(supply)" class="text-indigo-600 hover:text-indigo-900 cursor-pointer mr-2">Редактировать</a>
-                                <a @click="deleteSupply(supply.id)" class="text-red-600 hover:text-red-900 cursor-pointer">Удалить</a>
+                                <a @click="editSupply(supply)" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-500 cursor-pointer mr-2">Редактировать</a>
+                                <a @click="deleteSupply(supply.id)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-500 cursor-pointer">Удалить</a>
                             </div>
                         </div>
                     </div>
@@ -281,18 +281,18 @@ function deleteSupply(supplyId) {
 .modalMessage {
     position: fixed;
     top: 10%;
-    right: -100%; /* Начальная позиция за пределами экрана */
+    right: -100%;
     border: 1px solid #ccc;
     box-shadow: 0px 0px 20px #444;
-    background-color: rgba(0, 95, 13, 0.9); /* Более мягкий цвет */
+    background-color: rgba(0, 95, 13, 0.9);
     padding: 20px 40px;
     color: #fff;
-    transition: right 0.5s ease; /* Анимация появления */
+    transition: right 0.5s ease;
     z-index: 1000;
 }
 
 .modalMessage.show {
-    right: 0%; /* Конечная позиция на экране */
+    right: 0%;
 }
 
 .mgreen {
