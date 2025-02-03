@@ -84,6 +84,9 @@ const logout = () => {
                                 <NavLink :href="route('orders')" :active="route().current('orders')" class="text-white hover:text-gray-200">
                                     Заказы
                                 </NavLink>
+                                <NavLink :href="route('calendar')" :active="route().current('calendar')" class="text-white hover:text-gray-200">
+                                    Календарь
+                                </NavLink>
                             </div>
                         </div>
 
