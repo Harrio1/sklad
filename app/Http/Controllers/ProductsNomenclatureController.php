@@ -143,4 +143,13 @@ class ProductsNomenclatureController extends Controller
             return Response::json(['status' => 'Не удалось удалить связь'], 400);
         }
     }
+
+    public function getNomenclaturesByProductId($productId)
+    {
+        $nomenclatures = Products_Nomenclature::where('product_id', $productId)
+            ->with('nomenclature')
+            ->get();
+
+        return response()->json(['nomenclatures' => $nomenclatures], 200);
+    }
 }

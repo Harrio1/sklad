@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\OrdersController;
+use App\Http\Controllers\ProductsNomenclatureController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,3 +26,4 @@ Route::post('/orders', [OrdersController::class, 'placeOrder'])->name('api.order
 Route::get('/orders', [OrdersController::class, 'getOrders']);
 Route::put('/orders/{order}', [OrdersController::class, 'updateOrderStatus']);
 Route::post('/orders/{order}/status', [OrdersController::class, 'updateStatus']);
+Route::get('/products/{productId}/nomenclatures', [ProductsNomenclatureController::class, 'getNomenclaturesByProductId']);

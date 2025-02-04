@@ -1,6 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 const expanded = ref(null);
 
@@ -8,33 +9,110 @@ function toggleExpand(section) {
     expanded.value = expanded.value === section ? null : section;
 }
 
-const products = ref([
-  { id: 1, name: 'Продукт 1' },
-  { id: 2, name: 'Продукт 2' },
-  // Добавьте другие продукты
-]);
+const products = ref([]);
+const nomenclatures = ref([]);
 
 const days = ref(['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']);
 
 const tableData = ref([]);
 
-const selectedProduct = ref(products.value[0].id);
+const selectedProduct = ref(null);
+
+const orders = ref([]);
+
+function loadNomenclatures(productId) {
+    axios.get(`/api/products/${productId}/nomenclatures`)
+        .then(response => {
+            nomenclatures.value = response.data.nomenclatures;
+            updateTable();
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке номенклатур:', error);
+        });
+}
 
 function selectProduct(productId) {
-  selectedProduct.value = productId;
-  updateTable();
+    selectedProduct.value = productId;
+    loadNomenclatures(productId);
+}
+
+function loadOrders() {
+    axios.get('/api/orders')
+        .then(response => {
+            orders.value = response.data.orders;
+            updateTable();
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке заказов:', error);
+        });
+}
+
+function getOrderCountByDay(productId) {
+    const orderCountByDay = {
+        'Пн': 0,
+        'Вт': 0,
+        'Ср': 0,
+        'Чт': 0,
+        'Пт': 0,
+        'Сб': 0
+    };
+
+    orders.value.forEach(order => {
+        if (order.status === 2) {
+            const orderDate = new Date(order.updated_at);
+            const dayOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'][orderDate.getDay()];
+
+            const products = JSON.parse(order.products);
+            products.forEach(product => {
+                if (product.id === productId) {
+                    orderCountByDay[dayOfWeek] += 1;
+                }
+            });
+        }
+    });
+
+    return orderCountByDay;
 }
 
 function updateTable() {
-  // Логика для обновления tableData на основе выбранного продукта
+    tableData.value = nomenclatures.value.map(nomenclature => {
+        const orderCountByDay = getOrderCountByDay(nomenclature.nomenclature.id);
+
+        return {
+            id: nomenclature.nomenclature.id,
+            name: nomenclature.nomenclature.name,
+            unit: nomenclature.nomenclature.unit_of_measurement,
+            calculatedQuantity: nomenclature.quantity,
+            dailyData: orderCountByDay,
+            total: nomenclature.price * nomenclature.quantity,
+        };
+    });
 }
+
+function loadProducts() {
+    axios.get('/api/products')
+        .then(response => {
+            products.value = response.data.products;
+            if (products.value.length > 0) {
+                selectProduct(products.value[0].id);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке продуктов:', error);
+        });
+}
+
+onMounted(() => {
+    loadProducts();
+    loadOrders();
+});
 </script>
 
 <template>
     <AppLayout title="Dashboard">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                Календарь
+                Товарооборот
             </h2>
         </template>
 

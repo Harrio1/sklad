@@ -103,8 +103,8 @@ Route::middleware([
     Route::post('/orders/update-quantity', [OrdersController::class, 'updateQuantity'])->name('orders.update-quantity');
     Route::get('/api/orders', [OrdersController::class, 'getOrders'])->name('orders.get');
 
-    // calendar
-    Route::get('/calendar', function () {
-        return Inertia::render('Calendar');
-    })->name('calendar');
+    // turnover
+    Route::get('/turnover', function () {
+        return Inertia::render('Turnover');
+    })->name('turnover');
 });
