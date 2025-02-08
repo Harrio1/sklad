@@ -4,7 +4,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "serve": "php artisan serve --host=192.168.0.125",
+        "serve": "php artisan serve --host=192.168.56.1",
         "start": "concurrently \"npm run dev --host\" \"npm run serve\""
     },
     "devDependencies": {
