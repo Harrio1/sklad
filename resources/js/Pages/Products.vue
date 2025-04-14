@@ -200,8 +200,8 @@ const editingProduct = ref(null);
 
 <template>
     <AppLayout title="Products">
-        <div v-if="!isLoaded" class="preload">
-            <div class="preload2"></div>
+        <div v-if="!isLoaded" class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 backdrop-blur-sm">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 dark:border-blue-400"></div>
         </div>
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>

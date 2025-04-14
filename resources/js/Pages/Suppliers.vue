@@ -309,8 +309,8 @@ function formatPhoneNumber(value) {
             </div>
         </div>
         <!-- Прелоадер, отображаемы во время загрузки данных -->
-        <div v-else class="preloader">
-            <div class="loader"></div>
+        <div v-else class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 backdrop-blur-sm">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 dark:border-blue-400"></div>
         </div>
     </AppLayout>
 </template>
@@ -340,46 +340,5 @@ function formatPhoneNumber(value) {
 
 .mred {
     background-color: rgba(104, 2, 10, 0.9);
-}
-
-/* Стили для прелоадера */
-.preloader {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    opacity: 0.8;
-    background-color: #dddddd;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    left: 0;
-    top: 0;
-}
-
-.loader {
-    position: relative;
-    width: 50px;
-    height: 50px;
-    border-top: 5px solid #000;
-    border-radius: 50%;
-    animation: preload 1.5s ease 0s infinite;
-}
-
-.loader::after {
-    content: '';
-    width: 60px;
-    height: 60px;
-    border-top: 5px solid #000;
-    border-radius: 50%;
-    position: absolute;
-    left: -10px;
-    top: -10px;
-    animation: preload 1.5s ease 0.5s infinite;
-}
-
-@media (max-width: 640px) {
-    .overflow-x-auto {
-        -webkit-overflow-scrolling: touch;
-    }
 }
 </style>
