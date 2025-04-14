@@ -1,61 +1,107 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue';
 import axios from 'axios';
-
-const expanded = ref(null);
-function toggleExpand(section) {
-    expanded.value = expanded.value === section ? null : section;
-}
 
 const products = ref([]);
 const nomenclatures = ref([]);
-const days = ref(['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']);
+const days = ref([
+    { short: 'Пн', full: 'Понедельник' },
+    { short: 'Вт', full: 'Вторник' },
+    { short: 'Ср', full: 'Среда' },
+    { short: 'Чт', full: 'Четверг' },
+    { short: 'Пт', full: 'Пятница' },
+    { short: 'Сб', full: 'Суббота' }
+]);
 const tableData = ref([]);
 const selectedProduct = ref(null);
 const orders = ref([]);
+const activeTab = ref('all');
+const searchQuery = ref('');
+const isLoading = ref(false);
+const isMobile = ref(false);
+const mobileView = ref('products'); // Новое состояние для мобильного вида: 'products' или 'table'
+
+// Проверка мобильного устройства при загрузке и изменении размера окна
+function checkMobile() {
+    isMobile.value = window.innerWidth < 768;
+}
+
+// Фильтрация товаров по поисковому запросу
+const filteredProducts = computed(() => {
+    if (!searchQuery.value) return products.value;
+    
+    const query = searchQuery.value.toLowerCase();
+    return products.value.filter(product => 
+        product.name.toLowerCase().includes(query)
+    );
+});
+
+// Отфильтрованные заказы со статусом 2
+const filteredOrders = computed(() => {
+    return orders.value.filter(order => order.status === 2);
+});
 
 // Загрузка продуктов
 function loadProducts() {
+    isLoading.value = true;
     axios.get('/api/products')
         .then(response => {
             products.value = response.data.products;
             if (products.value.length > 0) {
                 selectProduct(products.value[0].id);
             }
+            isLoading.value = false;
         })
         .catch(error => {
             console.error('Ошибка при загрузке продуктов:', error);
+            isLoading.value = false;
         });
 }
 
 // Загрузка номенклатур для выбранного продукта
 function loadNomenclatures(productId) {
+    isLoading.value = true;
     axios.get(`/api/products/${productId}/nomenclatures`)
         .then(response => {
             nomenclatures.value = response.data.nomenclatures;
             updateTable();
+            isLoading.value = false;
         })
         .catch(error => {
             console.error('Ошибка при загрузке номенклатур:', error);
+            isLoading.value = false;
         });
 }
 
 // Загрузка заказов
 function loadOrders() {
+    isLoading.value = true;
     axios.get('/api/orders')
         .then(response => {
             orders.value = response.data.orders;
             updateTable();
+            isLoading.value = false;
         })
         .catch(error => {
             console.error('Ошибка при загрузке заказов:', error);
+            isLoading.value = false;
         });
 }
 
 function selectProduct(productId) {
     selectedProduct.value = productId;
     loadNomenclatures(productId);
+}
+
+// Переключение вкладки
+function setActiveTab(tab) {
+    activeTab.value = tab;
+}
+
+// Очистка поля поиска
+function clearSearch() {
+    searchQuery.value = '';
 }
 
 // Подсчёт заказов по дням недели (статус 2)
@@ -69,84 +115,279 @@ function getOrderCountByDay(productId) {
         'Сб': 0
     };
 
-    orders.value.forEach(order => {
-        if (order.status === 2) {
+    const ordersWithStatus2 = orders.value.filter(order => order.status === 2);
+
+    ordersWithStatus2.forEach(order => {
+        try {
             const orderDate = new Date(order.created_at);
             const dayOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'][orderDate.getDay()];
-            const productsInOrder = JSON.parse(order.products);
+            
+            // Проверяем, что order.products является валидной JSON строкой
+            let productsInOrder;
+            if (typeof order.products === 'string') {
+                productsInOrder = JSON.parse(order.products);
+            } else if (Array.isArray(order.products)) {
+                productsInOrder = order.products;
+            } else {
+                console.error('Неизвестный формат order.products:', order.products);
+                return;
+            }
+            
+            // Перебираем продукты в заказе
             productsInOrder.forEach(product => {
                 if (product.id === productId) {
-                    orderCountByDay[dayOfWeek] += 1;
+                    // Суммируем количество продукции, а не просто считаем заказы
+                    const quantity = product.quantity || 0;
+                    orderCountByDay[dayOfWeek] += parseInt(quantity);
                 }
             });
+        } catch (error) {
+            console.error('Ошибка при обработке заказа:', error, order);
         }
     });
+    
     return orderCountByDay;
 }
 
 function updateTable() {
     tableData.value = nomenclatures.value.map(nomenclature => {
-        const orderCountByDay = getOrderCountByDay(nomenclature.nomenclature.id);
+        // Получаем количество заказанной продукции по дням недели
+        const orderCountByDay = getOrderCountByDay(selectedProduct.value);
+        
+        // Вычисляем общее количество заказанной продукции
+        const totalOrderedQuantity = Object.values(orderCountByDay).reduce((sum, count) => sum + count, 0);
+        
+        // Рассчитываем общее израсходованное количество номенклатуры
+        // nomenclature.quantity - количество единиц номенклатуры на 1 единицу продукции
+        const totalConsumedQuantity = nomenclature.quantity * totalOrderedQuantity;
+        
+        // Расчет для отдельных дней
+        const dailyConsumedQuantity = {};
+        for (const day in orderCountByDay) {
+            // Для каждого дня умножаем количество заказанной продукции на расход номенклатуры
+            dailyConsumedQuantity[day] = orderCountByDay[day] * nomenclature.quantity;
+        }
+        
         return {
             id: nomenclature.nomenclature.id,
             name: nomenclature.nomenclature.name,
             unit: nomenclature.nomenclature.unit_of_measurement,
-            calculatedQuantity: nomenclature.quantity,
-            dailyData: orderCountByDay,
-            total: nomenclature.price * nomenclature.quantity,
+            calculatedQuantity: totalConsumedQuantity,
+            dailyData: dailyConsumedQuantity, // Используем расход номенклатуры по дням, а не количество заказов
+            dailyOrdersData: orderCountByDay, // Количество заказов по дням
+            total: nomenclature.price * totalConsumedQuantity,
         };
     });
 }
 
+// Получение информации о выбранном товаре
+const selectedProductInfo = computed(() => {
+    if (!selectedProduct.value) return null;
+    return products.value.find(p => p.id === selectedProduct.value);
+});
+
+// Отфильтрованные данные для отображения конкретного дня недели
+const filteredDays = computed(() => {
+    if (activeTab.value === 'all') {
+        return days.value.map(day => day.short);
+    } else {
+        return [activeTab.value];
+    }
+});
+
+// Получение дневных данных в нужном формате
+const getDayShortName = (dayObj) => {
+    return dayObj.short;
+};
+
 onMounted(() => {
     loadProducts();
     loadOrders();
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
 });
+
+// Удаление обработчика события при уничтожении компонента
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', checkMobile);
+});
+
+// Обновляем таблицу при изменении заказов
+watch(orders, updateTable);
 </script>
 
 <template>
-    <AppLayout title="Dashboard">
+    <AppLayout title="Товарооборот">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Товарооборот
             </h2>
         </template>
 
-        <div class="flex py-4 sm:py-8">
-            <!-- Список продуктов -->
-            <div class="w-1/6 pr-4 pl-4">
-                <div class="space-y-2">
-                    <div v-for="product in products" :key="product.id" 
-                         @click="selectProduct(product.id)"
-                         :class="{'bg-blue-100 dark:bg-blue-700': selectedProduct === product.id}"
-                         class="cursor-pointer p-2 border border-blue-300 dark:border-blue-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
-                        <h3 class="font-medium text-sm truncate" :title="product.name">{{ product.name }}</h3>
-                    </div>
+        <div class="py-4 sm:py-8">
+            <!-- Вкладки -->
+            <div class="mb-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto overflow-y-hidden hide-scrollbar">
+                <div class="flex flex-nowrap -mb-px text-sm font-medium text-center min-w-full pb-1">
+                    <!-- Вкладка "Все дни" -->
+                    <a @click="setActiveTab('all')" 
+                       :class="{'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400': activeTab === 'all',
+                              'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-400': activeTab !== 'all'}"
+                       class="flex-1 p-3 sm:p-4 border-b-2 rounded-t-lg cursor-pointer whitespace-nowrap">
+                        Все дни
+                    </a>
+                    
+                    <!-- Вкладки дней недели -->
+                    <a v-for="day in days" :key="day.short" 
+                       @click="setActiveTab(day.short)"
+                       :class="{'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400': activeTab === day.short,
+                              'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-400': activeTab !== day.short}"
+                       class="flex-1 p-3 sm:p-4 border-b-2 rounded-t-lg cursor-pointer whitespace-nowrap">
+                        <span>{{ day.short }}</span>
+                        <span class="hidden md:inline"> ({{ day.full }})</span>
+                    </a>
                 </div>
             </div>
-            
-            <!-- Полосатая таблица -->
-            <div class="w-5/6 overflow-x-auto">
-                <table class="min-w-full table-auto divide-y divide-gray-300 dark:divide-gray-600 text-xs">
-                    <thead class="bg-gray-200 dark:bg-gray-800">
-                        <tr>
-                            <th class="px-2 py-1 text-center font-medium text-gray-700 dark:text-gray-300 uppercase w-40">Номенклатура</th>
-                            <th class="px-2 py-1 text-center font-medium text-gray-700 dark:text-gray-300 uppercase w-16">Ед. изм.</th>
-                            <th class="px-2 py-1 text-center font-medium text-gray-700 dark:text-gray-300 uppercase w-16">Кол-во</th>
-                            <th v-for="day in days" :key="day" class="px-2 py-1 text-center font-medium text-gray-700 dark:text-gray-300 uppercase w-12">{{ day }}</th>
-                            <th class="px-2 py-1 text-center font-medium text-gray-700 dark:text-gray-300 uppercase w-20">Сумма</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        <tr v-for="item in tableData" :key="item.id" class="hover:bg-gray-200 dark:hover:bg-gray-600 odd:bg-white even:bg-gray-50">
-                            <td class="px-2 py-1 text-center text-gray-800 dark:text-gray-100 truncate" :title="item.name">{{ item.name }}</td>
-                            <td class="px-2 py-1 text-center text-gray-800 dark:text-gray-100">{{ item.unit }}</td>
-                            <td class="px-2 py-1 text-center text-gray-800 dark:text-gray-100">{{ item.calculatedQuantity }}</td>
-                            <td v-for="day in days" :key="day" class="px-2 py-1 text-center text-gray-800 dark:text-gray-100">{{ item.dailyData[day] }}</td>
-                            <td class="px-2 py-1 text-center text-gray-800 dark:text-gray-100">{{ item.total }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+
+            <!-- Мобильный переключатель разделов -->
+            <div v-if="isMobile" class="mb-4">
+                <select 
+                    v-model="mobileView" 
+                    class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                >
+                    <option value="products">Список товаров</option>
+                    <option value="table">Таблица данных</option>
+                </select>
+            </div>
+
+            <div class="flex flex-col md:flex-row">
+                <!-- Список продуктов -->
+                <div 
+                    v-if="!isMobile || mobileView === 'products'" 
+                    class="w-full md:w-1/4 lg:w-1/5 pr-0 md:pr-4 pl-0 md:pl-4 mb-4 md:mb-0"
+                >
+                    <div class="mb-4">
+                        <h3 class="text-lg font-medium mb-3 text-gray-800 dark:text-gray-200">Готовые товары</h3>
+                        
+                        <!-- Поле поиска -->
+                        <div class="relative mb-4">
+                            <input 
+                                type="text" 
+                                v-model="searchQuery" 
+                                class="pl-3 pr-10 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700 dark:text-white" 
+                                placeholder="Поиск товара..." 
+                            />
+                            <button 
+                                v-if="searchQuery" 
+                                @click="clearSearch" 
+                                class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        
+                        <!-- Выбранный товар -->
+                        <div v-if="selectedProductInfo" class="mb-3 p-3 bg-blue-50 dark:bg-blue-800 rounded-lg">
+                            <h4 class="font-bold text-sm text-gray-800 dark:text-gray-100">Выбрано:</h4>
+                            <p class="text-sm text-gray-700 dark:text-gray-200">{{ selectedProductInfo.name }}</p>
+                        </div>
+
+                        <!-- Кнопка для перехода к таблице на мобильном -->
+                        <button 
+                            v-if="isMobile && selectedProduct" 
+                            @click="mobileView = 'table'" 
+                            class="w-full mb-3 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
+                        >
+                            Показать данные
+                        </button>
+                    </div>
+                    
+                    <!-- Индикатор загрузки -->
+                    <div v-if="isLoading" class="flex justify-center mb-3">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 dark:border-blue-400"></div>
+                    </div>
+                    
+                    <div class="space-y-2 max-h-[50vh] md:max-h-[60vh] overflow-y-auto overflow-x-hidden hide-scrollbar-x pr-1">
+                        <div v-if="filteredProducts.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-4">
+                            Товары не найдены
+                        </div>
+                        <div v-for="product in filteredProducts" :key="product.id" 
+                             @click="selectProduct(product.id)"
+                             :class="{'bg-blue-100 dark:bg-blue-700 text-gray-900 dark:text-white': selectedProduct === product.id, 'text-gray-900 dark:text-gray-200 bg-white dark:bg-gray-700': selectedProduct !== product.id}"
+                             class="cursor-pointer p-2 border border-blue-300 dark:border-blue-600 rounded-md shadow-sm">
+                            <h3 class="font-medium text-sm truncate" :title="product.name">{{ product.name }}</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Таблица с данными -->
+                <div 
+                    v-if="!isMobile || mobileView === 'table'" 
+                    class="w-full md:w-3/4 lg:w-4/5"
+                >
+                    <!-- Кнопка назад для мобильного -->
+                    <button 
+                        v-if="isMobile" 
+                        @click="mobileView = 'products'" 
+                        class="mb-3 p-2 bg-gray-200 dark:bg-gray-700 rounded-md text-gray-800 dark:text-gray-200 flex items-center hover:bg-gray-300 dark:hover:bg-gray-600"
+                    >
+                        <span class="mr-1">←</span> К списку товаров
+                    </button>
+
+                    <!-- Индикатор загрузки -->
+                    <div v-if="isLoading" class="flex justify-center my-4">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 dark:border-blue-400"></div>
+                    </div>
+                    
+                    <div v-else class="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-lg">
+                        <!-- Заголовок с выбранным продуктом -->
+                        <div class="bg-blue-600 dark:bg-blue-700 text-center p-2 font-bold text-white">
+                            {{ selectedProductInfo?.name || 'Готовый продукт' }}
+                        </div>
+
+                        <div class="overflow-x-auto overflow-y-hidden hide-scrollbar">
+                            <!-- Заголовки с количеством продукции по дням -->
+                            <div class="grid bg-blue-100 dark:bg-blue-900 min-w-[700px] pb-1" style="grid-template-columns: minmax(130px, 1.5fr) repeat(7, 1fr);">
+                                <!-- Пустая ячейка для Номенклатуры -->
+                                <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200"></div>
+                                <!-- Ячейки с количеством продукции и днями недели -->
+                                <div v-for="(day, index) in filteredDays" :key="index" class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">
+                                    {{ tableData[0]?.dailyOrdersData[day] || 0 }}
+                                </div>
+                                <!-- Общая сумма -->
+                                <div class="p-2 text-center font-semibold bg-blue-700 dark:bg-blue-800 text-white border-l border-gray-300 dark:border-gray-700">
+                                    {{ Object.values(tableData[0]?.dailyOrdersData || {}).reduce((sum, val) => sum + val, 0) }}
+                                </div>
+                            </div>
+
+                            <!-- Подзаголовки с днями недели -->
+                            <div class="grid bg-gray-100 dark:bg-gray-800 min-w-[700px]" style="grid-template-columns: minmax(130px, 1.5fr) repeat(7, 1fr);">
+                                <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 text-sm sm:text-base break-words">Номенклатура</div>
+                                <div v-for="day in filteredDays" :key="day" class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">
+                                    {{ day }}
+                                </div>
+                                <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">Всего</div>
+                            </div>
+
+                            <!-- Данные таблицы -->
+                            <div v-if="tableData.length === 0" class="p-4 text-center text-gray-500 dark:text-gray-400 min-w-[700px]">
+                                Нет данных для отображения
+                            </div>
+                            <template v-else>
+                                <div v-for="(item, index) in tableData" :key="item.id" 
+                                     :class="{'bg-white dark:bg-gray-900': index % 2 === 0, 'bg-gray-50 dark:bg-gray-800': index % 2 !== 0}"
+                                     class="grid border-t border-gray-300 dark:border-gray-700 min-w-[700px]" style="grid-template-columns: minmax(130px, 1.5fr) repeat(7, 1fr);">
+                                    <div class="p-2 truncate text-gray-700 dark:text-gray-300" :title="item.name">{{ item.name }}</div>
+                                    <div v-for="day in filteredDays" :key="day" class="p-2 text-center text-gray-700 dark:text-gray-300 border-l border-gray-300 dark:border-gray-700">
+                                        {{ item.dailyData[day].toFixed(item.dailyData[day] % 1 === 0 ? 0 : 1) }}
+                                    </div>
+                                    <div class="p-2 text-center text-gray-700 dark:text-gray-300 font-medium border-l border-gray-300 dark:border-gray-700">
+                                        {{ item.calculatedQuantity.toFixed(item.calculatedQuantity % 1 === 0 ? 0 : 1) }}
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>
@@ -154,10 +395,24 @@ onMounted(() => {
 
 <style scoped>
 .cursor-pointer {
-    transition: transform 0.3s;
+    transition: all 0.3s;
 }
 .cursor-pointer:hover {
-    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: rgba(59, 130, 246, 0.05);
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;  /* IE и Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;            /* Chrome, Safari, Opera */
+}
+.hide-scrollbar-x {
+    overflow-x: hidden;
+}
+.hide-scrollbar-x::-webkit-scrollbar-horizontal {
+    display: none;
 }
 @media (max-width: 640px) {
     .overflow-x-auto {
