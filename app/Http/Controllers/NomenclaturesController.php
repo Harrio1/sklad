@@ -17,7 +17,7 @@ class NomenclaturesController extends Controller
             'name' => ['required', 'max:50'],
             'supplier_id' => ['required', 'integer'],
             'price_per_unit' => ['required', 'numeric', 'min:0'],
-            'unit_of_measurement' => ['required', 'in:шт.,кг.,л.'], // Новое правило валидации
+            'unit_of_measurement' => ['required', 'string', 'max:10'], // Изменено для поддержки пользовательских единиц
         ]);
 
         // Создание нового объекта номенклатуры

@@ -16,13 +16,11 @@ const showingNavigationDropdown = ref(false);
 const theme = ref(localStorage.getItem('theme') || 'light');
 const isDarkMode = ref(theme.value === 'dark');
 
-// Watch for changes in theme and update body class
 watch(theme, (newTheme) => {
     document.body.classList.toggle('dark', newTheme === 'dark');
     localStorage.setItem('theme', newTheme);
 });
 
-// Function to toggle theme
 const toggleTheme = () => {
     theme.value = theme.value === 'light' ? 'dark' : 'light';
     isDarkMode.value = !isDarkMode.value;
@@ -49,22 +47,17 @@ const logout = () => {
         <Banner />
 
         <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-            <!-- Верхняя панель с градиентом только для шапки -->
             <nav>
-                <!-- Шапка с градиентом -->
                 <div class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-gray-800 dark:to-gray-900 shadow-lg">
-                    <!-- Primary Navigation Menu -->
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div class="flex justify-between h-16">
                             <div class="flex">
-                                <!-- Logo -->
                                 <div class="shrink-0 flex items-center">
                                     <Link :href="route('dashboard')" class="text-white text-xl font-bold">
                                         Фабрика
                                     </Link>
                                 </div>
 
-                                <!-- Navigation Links (для десктопа) -->
                                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                     <NavLink :href="route('dashboard')" :active="route().current('dashboard')" class="text-white hover:text-gray-200">
                                         Главная
@@ -95,7 +88,6 @@ const logout = () => {
 
                             <div class="hidden sm:flex sm:items-center sm:ms-6">
                                 <div class="ms-3 relative">
-                                    <!-- Teams Dropdown -->
                                     <Dropdown v-if="$page.props.jetstream.hasTeamFeatures" align="right" width="60">
                                         <template #trigger>
                                             <span class="inline-flex rounded-md">
@@ -111,12 +103,10 @@ const logout = () => {
 
                                         <template #content>
                                             <div class="w-60">
-                                                <!-- Team Management -->
                                                 <div class="block px-4 py-2 text-xs text-gray-400 dark:text-gray-300">
                                                     Manage Team
                                                 </div>
 
-                                                <!-- Team Settings -->
                                                 <DropdownLink :href="route('teams.show', $page.props.auth.user.current_team)">
                                                     Team Settings
                                                 </DropdownLink>
@@ -125,7 +115,6 @@ const logout = () => {
                                                     Create New Team
                                                 </DropdownLink>
 
-                                                <!-- Team Switcher -->
                                                 <template v-if="$page.props.auth.user.all_teams.length > 1">
                                                     <div class="border-t border-gray-200 dark:border-gray-600" />
 
@@ -152,7 +141,6 @@ const logout = () => {
                                     </Dropdown>
                                 </div>
 
-                                <!-- Settings Dropdown -->
                                 <div class="ms-3 relative">
                                     <Dropdown align="right" width="48">
                                         <template #trigger>
@@ -174,7 +162,6 @@ const logout = () => {
                                         <template #content>
                                             <div class="rounded-md ring-1 ring-black ring-opacity-5 py-1 bg-gray-50 dark:bg-gray-800">
                                                 <div class="bg-gray-50 dark:bg-gray-800 rounded-md shadow-lg overflow-hidden">
-                                                    <!-- Account Management -->
                                                     <div class="block px-4 py-2 text-xs text-gray-400 dark:text-gray-300">
                                                         Настройки
                                                     </div>
@@ -191,7 +178,6 @@ const logout = () => {
                                                         {{ isDarkMode ? 'Светлая тема' : 'Темная тема' }}
                                                     </button>
 
-                                                    <!-- Authentication -->
                                                     <form @submit.prevent="logout">
                                                         <DropdownLink as="button" class="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                             Выход
@@ -204,7 +190,6 @@ const logout = () => {
                                 </div>
                             </div>
 
-                            <!-- Hamburger -->
                             <div class="-me-2 flex items-center sm:hidden">
                                 <button class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-gray-200 hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700 focus:text-white transition duration-150 ease-in-out" @click="showingNavigationDropdown = ! showingNavigationDropdown">
                                     <svg
@@ -234,13 +219,12 @@ const logout = () => {
                     </div>
                 </div>
 
-                <!-- Responsive Navigation Menu (для мобильных, без градиента) -->
                 <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden">
                     <div class="bg-gray-50 dark:bg-gray-800 pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')" 
                             class="text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                             active-class="text-blue-600 dark:text-blue-200 bg-blue-50 dark:bg-blue-900/30 font-medium">
-                            Dashboard
+                            Главная
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('suppliers')" :active="route().current('suppliers')" 
                             class="text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -279,7 +263,6 @@ const logout = () => {
                         </ResponsiveNavLink>
                     </div>
 
-                    <!-- Responsive Settings Options -->
                     <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         <div class="flex items-center px-4">
                             <div v-if="$page.props.jetstream.managesProfilePhotos" class="shrink-0 me-3">
@@ -309,7 +292,6 @@ const logout = () => {
                                 API Tokens
                             </ResponsiveNavLink>
                             
-                            <!-- Переключатель темы для мобильных устройств -->
                             <ResponsiveNavLink as="button" @click="toggleTheme" 
                                 class="text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
                                 <span v-if="isDarkMode" class="mr-2">☀️</span>
@@ -317,7 +299,6 @@ const logout = () => {
                                 {{ isDarkMode ? 'Светлая тема' : 'Темная тема' }}
                             </ResponsiveNavLink>
 
-                            <!-- Authentication -->
                             <form method="POST" @submit.prevent="logout" class="w-full">
                                 <ResponsiveNavLink as="button" 
                                     class="text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left">
@@ -325,7 +306,6 @@ const logout = () => {
                                 </ResponsiveNavLink>
                             </form>
 
-                            <!-- Team Management -->
                             <template v-if="$page.props.jetstream.hasTeamFeatures">
                                 <div class="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2" />
 
@@ -333,7 +313,6 @@ const logout = () => {
                                     Manage Team
                                 </div>
 
-                                <!-- Team Settings -->
                                 <ResponsiveNavLink :href="route('teams.show', $page.props.auth.user.current_team)" :active="route().current('teams.show')" 
                                     class="text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                                     active-class="text-blue-600 dark:text-blue-200 bg-blue-50 dark:bg-blue-900/30 font-medium">
@@ -346,7 +325,6 @@ const logout = () => {
                                     Create New Team
                                 </ResponsiveNavLink>
 
-                                <!-- Team Switcher -->
                                 <template v-if="$page.props.auth.user.all_teams.length > 1">
                                     <div class="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2" />
 
@@ -374,14 +352,12 @@ const logout = () => {
                 </div>
             </nav>
 
-            <!-- Page Heading -->
             <header v-if="$slots.header" class="bg-gray-50 dark:bg-gray-800 shadow">
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>
 
-            <!-- Page Content -->
             <main>
                 <slot />
             </main>

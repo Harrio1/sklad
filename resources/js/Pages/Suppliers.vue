@@ -1,14 +1,11 @@
 <script setup>
-// Импортируем необходимые компоненты и библиотеки
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive, watch } from 'vue';
 import axios from 'axios';
 import IMask from 'imask';
 
-// Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-// Создаем реактивный объект для формы поставщика
 const form = reactive({
     supplierName: null,
     address: null,
@@ -16,16 +13,14 @@ const form = reactive({
     phoneNumber: null
 });
 
-// Создаем реактивные переменные для управления состоянием
-let isEdit = ref(false); // Флаг для режима редактирования
-let isEditId = ref(0); // ID редактируемого поставщика
-let isOpenModal = ref(false); // Флаг для отображения модального окна
-let messageResponse = ref(''); // Сообщение для модального окна
-let messageResponseColor = ref(''); // Цвет сообщения
-let isLoaded = ref(false); // Флаг для загрузки данных
+let isEdit = ref(false);
+let isEditId = ref(0);
+let isOpenModal = ref(false);
+let messageResponse = ref('');
+let messageResponseColor = ref('');
+let isLoaded = ref(false);
 let isLoading = ref(false);
 
-// Функция для закрытия модального окна
 function closemessageResponse() {
     document.querySelector('.modalMessage').classList.remove('show');
     setTimeout(() => {
@@ -35,29 +30,25 @@ function closemessageResponse() {
     }, 500);
 }
 
-// Создаем реактивный объект для списка поставщиков
 const suppliers = reactive({});
 
-// Функция для получения списка поставщиков с сервера
 function getSuppliers() {
     axios.get('/get-suppliers').then((response) => {
         suppliers.value = response.data.suppliers;
         isLoaded.value = true;
     });
 }
-getSuppliers(); // Вызываем функцию для загрузки данных при инициализации
+getSuppliers();
 
-// Функция для удаления поставщиков
 function deleteSuppliers(ids) {
     if (confirm('Вы действительно хотите удалить запись?')) {
         axios.post('/delete-suppliers', { suppliers_id: ids }).then((response) => {
             openModal(response.data.status, 'mgreen');
-            getSuppliers(); // Обновляем список после удаления
+            getSuppliers();
         });
     }
 }
 
-// Функция для подготовки данных поставщика к редактированию
 function updateSuppliers(ids) {
     let b = suppliers.value.find((el) => el.id == ids);
     form.supplierName = b.name;
@@ -68,7 +59,6 @@ function updateSuppliers(ids) {
     isEditId.value = ids;
 }
 
-// Функция для очистки формы
 function clearSuppliers() {
     form.supplierName = '';
     form.supplierComments = '';
@@ -76,7 +66,6 @@ function clearSuppliers() {
     form.phoneNumber = null;
 }
 
-// Функция для открытия модального окна с сообщением
 function openModal(message, color) {
     messageResponse.value = message;
     messageResponseColor.value = color;
@@ -85,11 +74,9 @@ function openModal(message, color) {
         document.querySelector('.modalMessage').classList.add('show');
     }, 10);
 
-    // Закрыть модальное окно через 3 секунды
     setTimeout(closemessageResponse, 3000);
 }
 
-// Функция для добавления нового поставщика
 function responseSuppliers() {
     axios.post('/add-suppliers', {
         csrf: csrf,
@@ -99,16 +86,15 @@ function responseSuppliers() {
         phoneNumber: cleanPhoneNumber(form.phoneNumber)
     }).then((response) => {
         if (response.data.isOk) {
-            clearSuppliers(); // Очищаем форму после успешного добавления
+            clearSuppliers();
             openModal(response.data.status, 'mgreen');
-            getSuppliers(); // Обновляем список поставщиков
+            getSuppliers();
         } else {
             openModal(response.data.status, 'mred');
         }
     });
 }
 
-// Функция для обновления данных поставщика на сервере
 function updateSuppliersToServ() {
     axios.post('/update-suppliers', {
         csrf: csrf,
@@ -119,16 +105,15 @@ function updateSuppliersToServ() {
         phoneNumber: cleanPhoneNumber(form.phoneNumber)
     }).then((response) => {
         if (response.data.isOk) {
-            clearSuppliers(); // Очищаем форму после успешного обновления
+            clearSuppliers();
             openModal(response.data.status, 'mgreen');
-            getSuppliers(); // Обновляем список поставщиков
+            getSuppliers();
         } else {
             openModal(response.data.status, 'mred');
         }
     });
 }
 
-// Новая функция для очистки номера телефона
 function cleanPhoneNumber(phoneNumber) {
     return phoneNumber.replace(/\D/g, '').slice(0, 11);
 }
@@ -147,7 +132,6 @@ function onPhoneInput(e) {
   const formattedValue = formatPhoneNumber(value);
   form.phoneNumber = formattedValue;
   
-  // Устанавливаем курсор в конец ввода
   setTimeout(() => {
     input.setSelectionRange(formattedValue.length, formattedValue.length);
   }, 0);
@@ -163,7 +147,6 @@ function formatPhoneNumber(value) {
 
 <template>
     <AppLayout title="Suppliers">
-        <!-- Модальное окно для отображения сообщений -->
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -171,13 +154,11 @@ function formatPhoneNumber(value) {
             </h2>
         </template>
 
-        <!-- Основной контент страницы -->
         <div class="py-6 sm:py-12" v-if="!isLoading">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5 mb-6">
                     <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Добавить нового поставщика</h3>
                     <form>
-                        <!-- Поля формы для добавления/редактирования поставщика -->
                         <input type="hidden" name="_token" :value="csrf">
                         <div class="mb-4">
                             <label for="supplierName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Имя поставщика</label>
@@ -203,7 +184,6 @@ function formatPhoneNumber(value) {
                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
                         </div>
 
-                        <!-- Кнопки для добавления или редактирования поставщика -->
                         <button v-if="!isEdit" type="submit" @click.prevent="responseSuppliers()"
                                 class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить поставщика
@@ -215,40 +195,38 @@ function formatPhoneNumber(value) {
                     </form>
                 </div>
 
-                <!-- Список поставщиков -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
                     <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Список поставщиков</h3>
-                    <!-- Таблица для десктопной версии -->
                     <div class="hidden sm:block overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-900">
                                 <tr>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/4">
                                         Имя
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/4">
                                         Адрес
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">
                                         Телефон
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/4">
                                         Комментарий
                                     </th>
-                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">
                                         Действия
                                     </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 <tr v-for="item in suppliers.value" :key="item.id">
-                                    <td class="px-3 py-2 whitespace-nowrap">
+                                    <td class="px-3 py-2">
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0 h-10 w-10">
                                                 <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/150?img=1" alt="">
                                             </div>
                                             <div class="ml-4">
-                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-200">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-200 break-words">
                                                     {{ item.name }}
                                                 </div>
                                                 <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -257,16 +235,16 @@ function formatPhoneNumber(value) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-3 py-2 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900 dark:text-gray-200">{{ item.address }}</div>
+                                    <td class="px-3 py-2">
+                                        <div class="text-sm text-gray-900 dark:text-gray-200 break-words">{{ item.address }}</div>
                                     </td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
                                         {{ formatPhoneNumber(item.phone) }}
                                     </td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 break-words">
                                         {{ item.comments }}
                                     </td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">
+                                    <td class="px-3 py-2 text-sm font-medium">
                                         <a @click="updateSuppliers(item.id)" class="text-indigo-600 hover:text-indigo-900">Редактировать</a>
                                         <a @click="deleteSuppliers(item.id)" class="ml-2 text-red-600 hover:text-red-900">Удалить</a>
                                     </td>
@@ -274,7 +252,6 @@ function formatPhoneNumber(value) {
                             </tbody>
                         </table>
                     </div>
-                    <!-- Мобильное представление -->
                     <div class="sm:hidden">
                         <div v-for="item in suppliers.value" :key="item.id" class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mb-4 p-4">
                             <div class="flex items-center mb-2">
@@ -308,7 +285,6 @@ function formatPhoneNumber(value) {
                 </div>
             </div>
         </div>
-        <!-- Прелоадер, отображаемы во время загрузки данных -->
         <div v-else class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 backdrop-blur-sm">
             <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 dark:border-blue-400"></div>
         </div>
@@ -316,22 +292,21 @@ function formatPhoneNumber(value) {
 </template>
 
 <style scoped>
-/* Стили для модального окна */
 .modalMessage {
     position: fixed;
     top: 10%;
-    right: -100%; /* Начальная позиция за пределами экрана */
+    right: -100%;
     border: 1px solid #ccc;
     box-shadow: 0px 0px 20px #444;
-    background-color: rgba(0, 95, 13, 0.9); /* Более мягкий цвет */
+    background-color: rgba(0, 95, 13, 0.9);
     padding: 20px 40px;
     color: #fff;
-    transition: right 0.5s ease; /* Анимация появления */
+    transition: right 0.5s ease;
     z-index: 1000;
 }
 
 .modalMessage.show {
-    right: 0%; /* Конечная позиция на экране */
+    right: 0%;
 }
 
 .mgreen {
@@ -340,5 +315,19 @@ function formatPhoneNumber(value) {
 
 .mred {
     background-color: rgba(104, 2, 10, 0.9);
+}
+
+.table-fixed {
+    table-layout: fixed;
+}
+
+tbody td {
+    vertical-align: top;
+}
+
+.break-words {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
 }
 </style>

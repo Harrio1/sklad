@@ -6,28 +6,22 @@ import axios from 'axios'
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 
-// Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
 
-// Реактивная форма для ввода данных продукта
 const form = useForm({
     name: '',
     markup: '',
 });
 
-// Переменные для управления состоянием редактирования
 let isEdit = ref(false);
 let isEditId = ref(0);
 
-// Переменные для управления модальным окном и сообщениями
 let isOpenModal = ref(false);
 let messageResponse = ref('');
 let messageResponseColor = ref('');
 
-// Переменная для отслеживания загрузки данных
 let isLoaded = ref(false);
 
-// Функция для открытия модального окна
 function openModal(message, color) {
     messageResponse.value = message;
     messageResponseColor.value = color;
@@ -36,11 +30,9 @@ function openModal(message, color) {
         document.querySelector('.modalMessage').classList.add('show');
     }, 10);
 
-    // Закрыть модальное окно через 2 секунды
     setTimeout(closemessageResponse, 3000);
 }
 
-// Функция для закрытия модального окна
 function closemessageResponse() {
     document.querySelector('.modalMessage').classList.remove('show');
     setTimeout(() => {
@@ -50,10 +42,8 @@ function closemessageResponse() {
     }, 500);
 }
 
-// Реактивный объект для хранения данных продуктов
 const products = reactive({})
 
-// Функция для получения данных продуктов
 function getProducts(){
     axios.get(route('products.index'))
         .then(response => {
@@ -69,7 +59,6 @@ function getProducts(){
 }
 getProducts();
 
-// Функция для обновления таблицы продуктов
 function updateTable(mes, isok){
     isEdit = false;
     isEditId = 0;
@@ -85,7 +74,6 @@ function updateTable(mes, isok){
     setTimeout(closemessageResponse, 2000);
 }
 
-// Функция для подготовки данных продукта к редактированию
 function updateProducts(ids){
     let b = products.value.find((el) => el.id == ids);
     form.name = b.name;
@@ -94,20 +82,17 @@ function updateProducts(ids){
     isEditId.value = ids;
 }
 
-// Функция для очистки формы продукта
 function clearProducts(){
     form.name = '';
     form.markup = '';
 }
 
-// Функция для отмены редактирования
 function cancelEdit() {
     isEdit.value = false;
     isEditId.value = 0;
     form.reset();
 }
 
-// Функция для удаления продукта
 function deleteProducts(ids){
     let a = confirm('Вы действительно хотите удалить запись?');
     if (a == true) {
@@ -123,11 +108,9 @@ function deleteProducts(ids){
     }
 }
 
-// Переменные для управления модальным окном с деталями продукта
 const selectedProduct = ref(null);
 const showModal = ref(false);
 
-// Функция для открытия модального окна с деталями продукта
 function openProductDetails(productId) {
     axios.get(route('products.details', productId))
         .then(response => {
@@ -139,13 +122,11 @@ function openProductDetails(productId) {
         });
 }
 
-// Функция для закрытия модального окна с деталями продукта
 function closeModal() {
     showModal.value = false;
     selectedProduct.value = null;
 }
 
-// Переменные для поиска и сортировки
 const searchQuery = ref('');
 const sortBy = ref('name');
 const sortOrder = ref('asc');
@@ -153,10 +134,8 @@ const sortOrder = ref('asc');
 const minPrice = ref('');
 const maxPrice = ref('');
 
-// Объект для хранения ошибок валидации
 const errors = ref({});
 
-// Функция для валидации формы
 function validateForm() {
     errors.value = {};
     if (!form.name) errors.value.name = 'Название продукта обязательно';
@@ -165,7 +144,6 @@ function validateForm() {
     return Object.keys(errors.value).length === 0;
 }
 
-// Функция для отправки формы
 function submitForm() {
     if (validateForm()) {
         const url = isEdit.value ? route('products.update', isEditId.value) : route('products.store');
@@ -237,7 +215,6 @@ const editingProduct = ref(null);
 
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-4 sm:p-5">
                     <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Список продуктов</h3>
-                    <!-- Таблица для десктопной версии -->
                     <div v-if="isLoaded" class="hidden sm:block overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-900">
@@ -267,7 +244,6 @@ const editingProduct = ref(null);
                             </tbody>
                         </table>
                     </div>
-                    <!-- Мобильное представление -->
                     <div v-if="isLoaded" class="sm:hidden">
                         <div v-for="item in products.value" :key="item.id" class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mb-4 p-4">
                             <h4 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-200">
@@ -293,7 +269,6 @@ const editingProduct = ref(null);
                 </div>
             </div>
         </div>
-        <!-- Модальное окно с деталями продукта -->
         <div v-if="selectedProduct" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
                 <div class="mt-3 text-center">

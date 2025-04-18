@@ -10,6 +10,7 @@ use App\Http\Controllers\SuppliesController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\ProductsNomenclatureController;
 use App\Http\Controllers\OrdersController;
+use App\Http\Controllers\UnitOfMeasurementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,6 +103,11 @@ Route::middleware([
 
     Route::post('/orders/update-quantity', [OrdersController::class, 'updateQuantity'])->name('orders.update-quantity');
     Route::get('/api/orders', [OrdersController::class, 'getOrders'])->name('orders.get');
+    
+    // units of measurement
+    Route::get('/get-units-of-measurement', [UnitOfMeasurementController::class, 'getAll'])->name('get-units-of-measurement');
+    Route::post('/add-unit-of-measurement', [UnitOfMeasurementController::class, 'store'])->name('add-unit-of-measurement');
+    Route::delete('/delete-unit-of-measurement/{id}', [UnitOfMeasurementController::class, 'destroy'])->name('delete-unit-of-measurement');
 
     // turnover
     Route::get('/turnover', function () {

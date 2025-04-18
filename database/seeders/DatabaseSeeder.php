@@ -12,11 +12,29 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        $this->call([
+            // 1. Поставщики
+            SuppliersSeeder::class,
+            
+            // 2. Единицы измерения
+            UnitsOfMeasurementSeeder::class,
+            
+            // 3. Номенклатура
+            NomenclaturesSeeder::class,
+            
+            // 4. Поставки
+            SuppliesSeeder::class,
+            
+            // 5. Продукты
+            ProductsSeeder::class,
+            
+            // 6. Связь продуктов и номенклатуры
+            ProductsNomenclatureSeeder::class,
+            
+            // 7. Заказы
+            OrdersSeeder::class,
+        ]);
+        
+        $this->command->info('База данных успешно заполнена тестовыми данными!');
     }
 }

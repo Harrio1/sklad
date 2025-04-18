@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('price_per_unit', 12, 2);
             $table->decimal('total_quantity', 12, 2)->default(0);
             $table->decimal('total_price', 12, 2)->default(0);
-            $table->enum('unit_of_measurement', ['шт.', 'кг.', 'л.']); // Новая колонка
+            $table->string('unit_of_measurement');
             $table->timestamps();
         });
     }

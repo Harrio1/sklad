@@ -20,14 +20,12 @@ const activeTab = ref('all');
 const searchQuery = ref('');
 const isLoading = ref(false);
 const isMobile = ref(false);
-const mobileView = ref('products'); // Новое состояние для мобильного вида: 'products' или 'table'
+const mobileView = ref('products');
 
-// Проверка мобильного устройства при загрузке и изменении размера окна
 function checkMobile() {
     isMobile.value = window.innerWidth < 768;
 }
 
-// Фильтрация товаров по поисковому запросу
 const filteredProducts = computed(() => {
     if (!searchQuery.value) return products.value;
     
@@ -37,12 +35,10 @@ const filteredProducts = computed(() => {
     );
 });
 
-// Отфильтрованные заказы со статусом 2
 const filteredOrders = computed(() => {
     return orders.value.filter(order => order.status === 2);
 });
 
-// Загрузка продуктов
 function loadProducts() {
     isLoading.value = true;
     axios.get('/api/products')
@@ -59,7 +55,6 @@ function loadProducts() {
         });
 }
 
-// Загрузка номенклатур для выбранного продукта
 function loadNomenclatures(productId) {
     isLoading.value = true;
     axios.get(`/api/products/${productId}/nomenclatures`)
@@ -74,7 +69,6 @@ function loadNomenclatures(productId) {
         });
 }
 
-// Загрузка заказов
 function loadOrders() {
     isLoading.value = true;
     axios.get('/api/orders')
@@ -94,17 +88,14 @@ function selectProduct(productId) {
     loadNomenclatures(productId);
 }
 
-// Переключение вкладки
 function setActiveTab(tab) {
     activeTab.value = tab;
 }
 
-// Очистка поля поиска
 function clearSearch() {
     searchQuery.value = '';
 }
 
-// Подсчёт заказов по дням недели (статус 2)
 function getOrderCountByDay(productId) {
     const orderCountByDay = {
         'Пн': 0,
@@ -122,7 +113,6 @@ function getOrderCountByDay(productId) {
             const orderDate = new Date(order.created_at);
             const dayOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'][orderDate.getDay()];
             
-            // Проверяем, что order.products является валидной JSON строкой
             let productsInOrder;
             if (typeof order.products === 'string') {
                 productsInOrder = JSON.parse(order.products);
@@ -133,10 +123,8 @@ function getOrderCountByDay(productId) {
                 return;
             }
             
-            // Перебираем продукты в заказе
             productsInOrder.forEach(product => {
                 if (product.id === productId) {
-                    // Суммируем количество продукции, а не просто считаем заказы
                     const quantity = product.quantity || 0;
                     orderCountByDay[dayOfWeek] += parseInt(quantity);
                 }
@@ -151,20 +139,14 @@ function getOrderCountByDay(productId) {
 
 function updateTable() {
     tableData.value = nomenclatures.value.map(nomenclature => {
-        // Получаем количество заказанной продукции по дням недели
         const orderCountByDay = getOrderCountByDay(selectedProduct.value);
         
-        // Вычисляем общее количество заказанной продукции
         const totalOrderedQuantity = Object.values(orderCountByDay).reduce((sum, count) => sum + count, 0);
         
-        // Рассчитываем общее израсходованное количество номенклатуры
-        // nomenclature.quantity - количество единиц номенклатуры на 1 единицу продукции
         const totalConsumedQuantity = nomenclature.quantity * totalOrderedQuantity;
         
-        // Расчет для отдельных дней
         const dailyConsumedQuantity = {};
         for (const day in orderCountByDay) {
-            // Для каждого дня умножаем количество заказанной продукции на расход номенклатуры
             dailyConsumedQuantity[day] = orderCountByDay[day] * nomenclature.quantity;
         }
         
@@ -173,20 +155,18 @@ function updateTable() {
             name: nomenclature.nomenclature.name,
             unit: nomenclature.nomenclature.unit_of_measurement,
             calculatedQuantity: totalConsumedQuantity,
-            dailyData: dailyConsumedQuantity, // Используем расход номенклатуры по дням, а не количество заказов
-            dailyOrdersData: orderCountByDay, // Количество заказов по дням
+            dailyData: dailyConsumedQuantity,
+            dailyOrdersData: orderCountByDay,   
             total: nomenclature.price * totalConsumedQuantity,
         };
     });
 }
 
-// Получение информации о выбранном товаре
 const selectedProductInfo = computed(() => {
     if (!selectedProduct.value) return null;
     return products.value.find(p => p.id === selectedProduct.value);
 });
 
-// Отфильтрованные данные для отображения конкретного дня недели
 const filteredDays = computed(() => {
     if (activeTab.value === 'all') {
         return days.value.map(day => day.short);
@@ -195,7 +175,6 @@ const filteredDays = computed(() => {
     }
 });
 
-// Получение дневных данных в нужном формате
 const getDayShortName = (dayObj) => {
     return dayObj.short;
 };
@@ -207,12 +186,10 @@ onMounted(() => {
     window.addEventListener('resize', checkMobile);
 });
 
-// Удаление обработчика события при уничтожении компонента
 onBeforeUnmount(() => {
     window.removeEventListener('resize', checkMobile);
 });
 
-// Обновляем таблицу при изменении заказов
 watch(orders, updateTable);
 </script>
 
@@ -225,10 +202,8 @@ watch(orders, updateTable);
         </template>
 
         <div class="py-4 sm:py-8">
-            <!-- Вкладки -->
             <div class="mb-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto overflow-y-hidden hide-scrollbar">
                 <div class="flex flex-nowrap -mb-px text-sm font-medium text-center min-w-full pb-1">
-                    <!-- Вкладка "Все дни" -->
                     <a @click="setActiveTab('all')" 
                        :class="{'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400': activeTab === 'all',
                               'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-400': activeTab !== 'all'}"
@@ -236,7 +211,6 @@ watch(orders, updateTable);
                         Все дни
                     </a>
                     
-                    <!-- Вкладки дней недели -->
                     <a v-for="day in days" :key="day.short" 
                        @click="setActiveTab(day.short)"
                        :class="{'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400': activeTab === day.short,
@@ -248,7 +222,6 @@ watch(orders, updateTable);
                 </div>
             </div>
 
-            <!-- Мобильный переключатель разделов -->
             <div v-if="isMobile" class="mb-4">
                 <select 
                     v-model="mobileView" 
@@ -260,7 +233,6 @@ watch(orders, updateTable);
             </div>
 
             <div class="flex flex-col md:flex-row">
-                <!-- Список продуктов -->
                 <div 
                     v-if="!isMobile || mobileView === 'products'" 
                     class="w-full md:w-1/4 lg:w-1/5 pr-0 md:pr-4 pl-0 md:pl-4 mb-4 md:mb-0"
@@ -268,7 +240,6 @@ watch(orders, updateTable);
                     <div class="mb-4">
                         <h3 class="text-lg font-medium mb-3 text-gray-800 dark:text-gray-200">Готовые товары</h3>
                         
-                        <!-- Поле поиска -->
                         <div class="relative mb-4">
                             <input 
                                 type="text" 
@@ -285,13 +256,11 @@ watch(orders, updateTable);
                             </button>
                         </div>
                         
-                        <!-- Выбранный товар -->
                         <div v-if="selectedProductInfo" class="mb-3 p-3 bg-blue-50 dark:bg-blue-800 rounded-lg">
                             <h4 class="font-bold text-sm text-gray-800 dark:text-gray-100">Выбрано:</h4>
                             <p class="text-sm text-gray-700 dark:text-gray-200">{{ selectedProductInfo.name }}</p>
                         </div>
 
-                        <!-- Кнопка для перехода к таблице на мобильном -->
                         <button 
                             v-if="isMobile && selectedProduct" 
                             @click="mobileView = 'table'" 
@@ -301,7 +270,6 @@ watch(orders, updateTable);
                         </button>
                     </div>
                     
-                    <!-- Индикатор загрузки -->
                     <div v-if="isLoading" class="flex justify-center mb-3">
                         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 dark:border-blue-400"></div>
                     </div>
@@ -319,12 +287,10 @@ watch(orders, updateTable);
                     </div>
                 </div>
                 
-                <!-- Таблица с данными -->
                 <div 
                     v-if="!isMobile || mobileView === 'table'" 
                     class="w-full md:w-3/4 lg:w-4/5"
                 >
-                    <!-- Кнопка назад для мобильного -->
                     <button 
                         v-if="isMobile" 
                         @click="mobileView = 'products'" 
@@ -333,33 +299,27 @@ watch(orders, updateTable);
                         <span class="mr-1">←</span> К списку товаров
                     </button>
 
-                    <!-- Индикатор загрузки -->
                     <div v-if="isLoading" class="flex justify-center my-4">
                         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 dark:border-blue-400"></div>
                     </div>
                     
                     <div v-else class="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-lg">
-                        <!-- Заголовок с выбранным продуктом -->
                         <div class="bg-blue-600 dark:bg-blue-700 text-center p-2 font-bold text-white">
                             {{ selectedProductInfo?.name || 'Готовый продукт' }}
                         </div>
 
                         <div class="overflow-x-auto overflow-y-hidden hide-scrollbar">
-                            <!-- Заголовки с количеством продукции по дням -->
                             <div class="grid bg-blue-100 dark:bg-blue-900 min-w-[700px] pb-1" style="grid-template-columns: minmax(130px, 1.5fr) repeat(7, 1fr);">
-                                <!-- Пустая ячейка для Номенклатуры -->
+
                                 <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200"></div>
-                                <!-- Ячейки с количеством продукции и днями недели -->
                                 <div v-for="(day, index) in filteredDays" :key="index" class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">
                                     {{ tableData[0]?.dailyOrdersData[day] || 0 }}
                                 </div>
-                                <!-- Общая сумма -->
                                 <div class="p-2 text-center font-semibold bg-blue-700 dark:bg-blue-800 text-white border-l border-gray-300 dark:border-gray-700">
                                     {{ Object.values(tableData[0]?.dailyOrdersData || {}).reduce((sum, val) => sum + val, 0) }}
                                 </div>
                             </div>
 
-                            <!-- Подзаголовки с днями недели -->
                             <div class="grid bg-gray-100 dark:bg-gray-800 min-w-[700px]" style="grid-template-columns: minmax(130px, 1.5fr) repeat(7, 1fr);">
                                 <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 text-sm sm:text-base break-words">Номенклатура</div>
                                 <div v-for="day in filteredDays" :key="day" class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">
@@ -368,7 +328,6 @@ watch(orders, updateTable);
                                 <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">Всего</div>
                             </div>
 
-                            <!-- Данные таблицы -->
                             <div v-if="tableData.length === 0" class="p-4 text-center text-gray-500 dark:text-gray-400 min-w-[700px]">
                                 Нет данных для отображения
                             </div>
@@ -402,11 +361,11 @@ watch(orders, updateTable);
     background-color: rgba(59, 130, 246, 0.05);
 }
 .hide-scrollbar {
-    -ms-overflow-style: none;  /* IE и Edge */
-    scrollbar-width: none;     /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 .hide-scrollbar::-webkit-scrollbar {
-    display: none;            /* Chrome, Safari, Opera */
+    display: none;
 }
 .hide-scrollbar-x {
     overflow-x: hidden;

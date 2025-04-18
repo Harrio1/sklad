@@ -15,7 +15,6 @@ const messageResponseColor = ref('');
 const displayMode = ref('single');
 const selectedStatuses = ref([]);
 
-// Загрузка продуктов из базы данных
 async function loadProducts() {
     try {
         const response = await axios.get('/api/products');
@@ -29,7 +28,6 @@ async function loadProducts() {
     }
 }
 
-// Загрузка истории заказов
 async function loadOrders() {
     try {
         const response = await axios.get('/api/orders');
@@ -45,7 +43,6 @@ async function loadOrders() {
     }
 }
 
-// Переключение режима отображения
 function toggleDisplayMode() {
     if (displayMode.value === 'single') {
         displayMode.value = 'double';
@@ -56,7 +53,6 @@ function toggleDisplayMode() {
     }
 }
 
-// Переключение истории заказов
 function toggleOrderHistory() {
     showOrderHistory.value = !showOrderHistory.value;
     localStorage.setItem('showOrderHistory', showOrderHistory.value);
@@ -67,7 +63,6 @@ function toggleOrderHistory() {
     }
 }
 
-// Обработчик клика на строку заказа
 function toggleOrderDetails(order) {
     orders.value.forEach(o => {
         if (o.id !== order.id) {
@@ -78,7 +73,6 @@ function toggleOrderDetails(order) {
     saveOrderDetailsState();
 }
 
-// Изменение статуса заказа
 function changeOrderStatus(order, newStatus) {
     axios.post(`/api/orders/${order.id}/status`, { status: newStatus })
         .then(response => {
@@ -91,7 +85,6 @@ function changeOrderStatus(order, newStatus) {
         });
 }
 
-// Инициализация данных
 onMounted(() => {
     loadProducts();
     if (showOrderHistory.value) {
@@ -113,7 +106,6 @@ function restoreOrderDetailsState() {
     });
 }
 
-// Размещение заказа
 async function placeOrder() {
     try {
         const orderData = {
@@ -142,7 +134,6 @@ async function placeOrder() {
     }
 }
 
-// Функция для открытия модального окна
 function openModal(message, color) {
     messageResponse.value = message;
     messageResponseColor.value = color;
@@ -154,7 +145,6 @@ function openModal(message, color) {
     setTimeout(closemessageResponse, 3000);
 }
 
-// Функция для закрытия модального окна
 function closemessageResponse() {
     const modalElement = document.querySelector('.modalMessage');
     if (modalElement) {
@@ -167,12 +157,10 @@ function closemessageResponse() {
     }, 500);
 }
 
-// Общая стоимость заказа
 const totalPrice = computed(() => {
     return cart.value.reduce((total, item) => total + item.quantity * item.total_price, 0);
 });
 
-// Увеличение количества продукта
 const increaseProductQuantity = (productId) => {
     const product = products.value.find(p => p.id === productId);
     if (product) {
@@ -181,7 +169,6 @@ const increaseProductQuantity = (productId) => {
     }
 };
 
-// Уменьшение количества продукта
 const decreaseProductQuantity = (productId) => {
     const product = products.value.find(p => p.id === productId);
     if (product && product.quantity > 0) {
@@ -190,7 +177,6 @@ const decreaseProductQuantity = (productId) => {
     }
 };
 
-// Вспомогательная функция для обновления корзины
 const updateCart = (product) => {
     const cartItem = cart.value.find(item => item.id === product.id);
     if (product.quantity > 0) {
@@ -204,7 +190,6 @@ const updateCart = (product) => {
     }
 };
 
-// Для заказов
 const increaseOrderQuantity = (orderId) => {
     const order = orders.value.find(o => o.id === orderId);
     if (!order) return;
@@ -255,13 +240,11 @@ const decreaseOrderQuantity = (orderId) => {
     });
 };
 
-// Форматирование даты
 function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
 }
 
-// Фильтрация заказов по статусу
 const filteredOrders = computed(() => {
     if (selectedStatuses.value.length === 0) {
         return orders.value;
@@ -278,7 +261,6 @@ const filteredOrders = computed(() => {
         </div>
         <div v-else class="py-6 sm:py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex">
-                <!-- Основной контент -->
                 <div class="w-full">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">Управление заказами</h3>
@@ -289,7 +271,6 @@ const filteredOrders = computed(() => {
 
                     <div v-if="showOrderHistory" class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-6">
                         <div class="flex">
-                            <!-- Боковое меню для фильтрации -->
                             <div class="w-1/4 pr-4">
                                 <div class="bg-white dark:bg-gray-800 shadow-xl sm:rounded-lg p-4 mb-6">
                                     <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Фильтр по статусу</h3>
@@ -310,7 +291,6 @@ const filteredOrders = computed(() => {
                                 </div>
                             </div>
 
-                            <!-- История заказов -->
                             <div class="w-3/4">
                                 <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">История заказов</h3>
                                 <button @click="toggleDisplayMode" class="mb-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
@@ -354,7 +334,6 @@ const filteredOrders = computed(() => {
                     </div>
 
                     <div v-else>
-                        <!-- Список продуктов -->
                         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-6 mb-6">
                             <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Список продуктов</h3>
                             <div v-for="product in products" :key="product.id" class="flex justify-between items-center mb-4 p-4 border-b border-gray-200 dark:border-gray-700">
@@ -367,7 +346,6 @@ const filteredOrders = computed(() => {
                             </div>
                         </div>
 
-                        <!-- Корзина заказа -->
                         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-6">
                             <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Корзина заказа</h3>
                             <div v-for="item in cart" :key="item.id" 

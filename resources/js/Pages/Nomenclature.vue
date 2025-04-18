@@ -4,24 +4,28 @@ import { ref, reactive, onMounted, watch } from 'vue';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
 
-// Получаем CSRF-токен из мета-тега
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-// Массив единиц измерения
-const units = ['шт.', 'кг.', 'л.'];
+const units = ref([]);
 
-// Реактивная форма для ввода данных
 const form = reactive({
     name: null,
     suppliers_id: null,
     price_per_unit: null,
     unit_of_measurement: null,
+    unit_of_measurement_last: null,
 });
 
-// Добавляем новую переменную для отслеживания шага ввода цены
+const isUnitModalOpen = ref(false);
+const unitForm = reactive({
+    name: '',
+    type: 'integer',
+    step: 1,
+    min_value: 0
+});
+
 const priceStep = ref(1);
 
-// Следим за изменением единицы измерения
 watch(() => form.unit_of_measurement, (newValue) => {
     if (newValue === 'шт.') {
         priceStep.value = 1;
@@ -33,7 +37,6 @@ watch(() => form.unit_of_measurement, (newValue) => {
     }
 });
 
-// Переменные для управления модальным окном и сообщениями
 let isOpenModal = ref(false);
 let messageResponse = ref('');
 const suppliers = ref([]);
@@ -41,7 +44,6 @@ const isLoading = ref(true);
 
 let messageResponseColor = ref('');
 
-// Функция для открытия модального окна
 function openModal(message, color) {
     messageResponse.value = message;
     messageResponseColor.value = color;
@@ -53,7 +55,6 @@ function openModal(message, color) {
     setTimeout(closemessageResponse, 3000);
 }
 
-// Функция для закрытия модального окна
 function closemessageResponse() {
     const modalElement = document.querySelector('.modalMessage');
     if (modalElement) {
@@ -66,11 +67,9 @@ function closemessageResponse() {
     }, 500);
 }
 
-// Реактивный объект для хранения данных номенклатуры
 const nomenclature = reactive({});
-const turnoverData = ref([]); // Данные для оборотной ведомости
+const turnoverData = ref([]);
 
-// Функция для получения данных номенклатуры
 function getNomenclature() {
     axios.get('/get-nomenclature').then((response) => {
         nomenclature.value = response.data.nomenclatures;
@@ -78,7 +77,6 @@ function getNomenclature() {
     });
 }
 
-// Функция для получения данных поставщиков
 function getSuppliers() {
     axios.get('/get-suppliers').then((response) => {
         suppliers.value = response.data.suppliers;
@@ -86,7 +84,15 @@ function getSuppliers() {
     });
 }
 
-// Функция для получения данных оборотной ведомости
+function getUnits() {
+    axios.get('/get-units-of-measurement').then((response) => {
+        units.value = response.data.units.map(unit => unit.name);
+    }).catch(error => {
+        console.error("Ошибка при получении единиц измерения:", error);
+        units.value = ['шт.', 'кг.', 'л.'];
+    });
+}
+
 function getTurnoverData() {
     axios.get('/get-turnover-data').then((response) => {
         turnoverData.value = response.data.turnover;
@@ -95,14 +101,13 @@ function getTurnoverData() {
     });
 }
 
-// Выполняем функции при монтировании компонента
 onMounted(() => {
     getNomenclature();
     getSuppliers();
+    getUnits();
     getTurnoverData();
 });
 
-// Функция для удаления номенклатуры
 function deleteNomenclature(ids) {
     let a = confirm('Вы действительно хотите удалить запись?');
     if (a == true) {
@@ -115,7 +120,6 @@ function deleteNomenclature(ids) {
     }
 }
 
-// Функция для обновления таблицы
 function updateTable(mes) {
     openModal(mes, 'mgreen');
     getNomenclature();
@@ -126,7 +130,6 @@ function updateTable(mes) {
     form.unit_of_measurement = '';
 }
 
-// Функция для отправки данных номенклатуры
 function responseNomenclature() {
     if (form.unit_of_measurement === 'шт.') {
         form.price_per_unit = Math.round(form.price_per_unit);
@@ -143,10 +146,8 @@ function responseNomenclature() {
     });
 }
 
-// Инициализация текущей вкладки из localStorage или по умолчанию
 const currentTab = ref(localStorage.getItem('currentTab') || 'nomenclature');
 
-// Следим за изменением текущей вкладки и сохраняем в localStorage
 watch(currentTab, (newTab) => {
     localStorage.setItem('currentTab', newTab);
 });
@@ -155,7 +156,6 @@ async function downloadExcel() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Оборотная ведомость');
 
-    // Добавляем заголовки
     worksheet.columns = [
         { header: 'Имя', key: 'name', width: 20 },
         { header: 'Поставщик', key: 'supplier', width: 20 },
@@ -166,7 +166,6 @@ async function downloadExcel() {
         { header: 'Сумма (₽)', key: 'total_price', width: 15 }
     ];
 
-    // Добавляем данные
     turnoverData.value.forEach(item => {
         worksheet.addRow({
             name: item.name,
@@ -179,11 +178,9 @@ async function downloadExcel() {
         });
     });
 
-    // Получаем текущую дату и форматируем ее
     const today = new Date();
     const formattedDate = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
 
-    // Генерируем и скачиваем файл
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const link = document.createElement('a');
@@ -191,11 +188,120 @@ async function downloadExcel() {
     link.download = `Оборотная_ведомость_${formattedDate}.xlsx`;
     link.click();
 }
+
+function openUnitModal() {
+    unitForm.name = '';
+    unitForm.type = 'integer';
+    unitForm.step = 1;
+    unitForm.min_value = 0;
+    isUnitModalOpen.value = true;
+}
+
+function closeUnitModal() {
+    isUnitModalOpen.value = false;
+}
+
+function handleUnitChange() {
+    if (form.unit_of_measurement === 'create_new') {
+        openUnitModal();
+        form.unit_of_measurement = form.unit_of_measurement_last || '';
+    } else {
+        form.unit_of_measurement_last = form.unit_of_measurement;
+    }
+}
+
+function createUnit() {
+    if (!unitForm.name) {
+        openModal('Введите название единицы измерения', 'mred');
+        return;
+    }
+    
+    axios.post('/add-unit-of-measurement', {
+        name: unitForm.name,
+        type: unitForm.type,
+        step: unitForm.step,
+        min_value: unitForm.min_value
+    }).then((response) => {
+        units.value.push(unitForm.name);
+        form.unit_of_measurement = unitForm.name;
+        form.unit_of_measurement_last = unitForm.name;
+        
+        if (unitForm.type === 'integer') {
+            priceStep.value = 1;
+        } else {
+            priceStep.value = unitForm.step || 0.01;
+        }
+        
+        closeUnitModal();
+        openModal(response.data.status, 'mgreen');
+    }).catch(error => {
+        let errorMessage = 'Ошибка при создании единицы измерения';
+        if (error.response && error.response.data && error.response.data.message) {
+            errorMessage = error.response.data.message;
+        }
+        openModal(errorMessage, 'mred');
+    });
+}
 </script>
 
 <template>
     <AppLayout title="Nomenclature">
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
+        <Transition name="modal">
+            <div v-if="isUnitModalOpen" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="closeUnitModal"></div>
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                    <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                        <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="w-full">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+                                        Добавить новую единицу измерения
+                                    </h3>
+                                    <div class="mt-4">
+                                        <div class="mb-4">
+                                            <label for="unit_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Название единицы измерения</label>
+                                            <input type="text" id="unit_name" v-model="unitForm.name" required
+                                                   class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="unit_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Тип значения</label>
+                                            <select id="unit_type" v-model="unitForm.type" required
+                                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
+                                                <option value="integer">Целое число</option>
+                                                <option value="decimal">Дробное число</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-4" v-if="unitForm.type === 'decimal'">
+                                            <label for="unit_step" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Шаг изменения</label>
+                                            <input type="number" id="unit_step" v-model="unitForm.step" step="0.01" min="0.01" required
+                                                   class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="unit_min" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Минимальное значение</label>
+                                            <input type="number" id="unit_min" v-model="unitForm.min_value" :step="unitForm.type === 'integer' ? '1' : '0.01'" min="0" required
+                                                   class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button type="button" @click="createUnit"
+                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                Добавить
+                            </button>
+                            <button type="button" @click="closeUnitModal"
+                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Отмена
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+        
         <template #header>
             <div class="flex space-x-4">
                 <h2 
@@ -241,12 +347,15 @@ async function downloadExcel() {
 
                             <div class="mb-4">
                                 <label for="unit_of_measurement" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Единица измерения</label>
-                                <select id="unit_of_measurement" v-model="form.unit_of_measurement" required
-                                        class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
-                                    <option v-for="unit in units" :key="unit" :value="unit">
-                                        {{ unit }}
-                                    </option>
-                                </select>
+                                <div class="relative">
+                                    <select id="unit_of_measurement" v-model="form.unit_of_measurement" @change="handleUnitChange" required
+                                            class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
+                                        <option value="create_new">Создать единицу измерения...</option>
+                                        <option v-for="unit in units" :key="unit" :value="unit">
+                                            {{ unit }}
+                                        </option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="mb-4">
@@ -486,6 +595,17 @@ h2.active::after {
     right: 0;
     height: 2px;
     background-color: rgb(129, 140, 248);
+}
+
+.modal-enter-active,
+.modal-leave-active {
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
 }
 
 @media (max-width: 640px) {
