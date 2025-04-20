@@ -1,6 +1,8 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive, onMounted, computed, watch } from 'vue';
+import NotificationToast from '@/Components/NotificationToast.vue';
+import useNotifications from '@/Composables/useNotifications';
 import axios from 'axios';
 
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -15,9 +17,7 @@ const form = reactive({
 let isEdit = ref(false);
 let isEditId = ref(0);
 
-let isOpenModal = ref(false);
-let messageResponse = ref('');
-let messageResponseColor = ref('');
+const { notifications, showNotification, closeNotification } = useNotifications();
 
 let nomenclatures = ref([]);
 let supplies = ref([]);
@@ -64,6 +64,10 @@ watch(selectedNomenclatures, () => {
 function getNomenclatures() {
     return axios.get('/get-nomenclatures').then((response) => {
         nomenclatures.value = response.data.nomenclatures;
+    }).catch(error => {
+        console.error('Ошибка при получении номенклатур:', error);
+        showNotification('Ошибка при получении номенклатур', 'mred', 'Ошибка');
+        nomenclatures.value = [];
     });
 }
 
@@ -72,6 +76,11 @@ function getSupplies() {
         allSupplies.value = response.data.supplies;
         supplies.value = allSupplies.value.slice(0, itemsPerPage);
         hasMoreItems.value = supplies.value.length < allSupplies.value.length;
+    }).catch(error => {
+        console.error('Ошибка при получении поставок:', error);
+        showNotification('Ошибка при получении поставок', 'mred', 'Ошибка');
+        allSupplies.value = [];
+        supplies.value = [];
     });
 }
 
@@ -128,14 +137,9 @@ function addSupply() {
     }).then((response) => {
         openModal('Поставка успешно добавлена!', 'mgreen');
         getSupplies();
-        form.nomenclatureId = null;
-        form.quantity = 0;
-        form.unit = '';
-        form.compatibleUnit = '';
+        resetForm();
     }).catch(error => {
         console.error('Error adding supply:', error);
-        
-        console.log('Response data:', error.response ? error.response.data : 'No response data');
         
         let errorMessage = 'Ошибка при добавлении поставки.';
         if (error.response && error.response.data) {
@@ -226,23 +230,7 @@ function updateNomenclatureDetails(nomenclatureId) {
 }
 
 function openModal(message, color) {
-    messageResponse.value = message;
-    messageResponseColor.value = color;
-    isOpenModal.value = true;
-    setTimeout(() => {
-        document.querySelector('.modalMessage').classList.add('show');
-    }, 10);
-
-    setTimeout(closemessageResponse, 3000);
-}
-
-function closemessageResponse() {
-    document.querySelector('.modalMessage').classList.remove('show');
-    setTimeout(() => {
-        isOpenModal.value = false;
-        messageResponse.value = '';
-        messageResponseColor.value = '';
-    }, 500);
+    showNotification(message, color, color === 'mgreen' ? 'Успех' : 'Ошибка');
 }
 
 function updateTable(status) {
@@ -255,20 +243,22 @@ function updateTable(status) {
 }
 
 function deleteSupply(supplyId) {
-       axios.delete(`/delete-supply/${supplyId}`)
-           .then(response => {
-               if (response.data.status === 'Поставка успешно удалена') {
-                   getSupplies();
-                   openModal('Поставка успешно удалена!', 'mgreen');
-               } else {
-                   openModal('Ошибка при удалении поставки.', 'mred');
-               }
-           })
-           .catch(error => {
-               console.error('Error deleting supply:', error);
-               openModal('Ошибка при удалении поставки.', 'mred');
-           });
-   }
+    if (confirm('Вы действительно хотите удалить эту поставку?')) {
+        axios.delete(`/delete-supply/${supplyId}`)
+            .then(response => {
+                if (response.data.status === 'Поставка успешно удалена') {
+                    getSupplies();
+                    openModal('Поставка успешно удалена!', 'mgreen');
+                } else {
+                    openModal('Ошибка при удалении поставки.', 'mred');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting supply:', error);
+                openModal('Ошибка при удалении поставки.', 'mred');
+            });
+    }
+}
 
 function loadMoreSupplies() {
     currentPage.value++;
@@ -282,11 +272,23 @@ function clearFilters() {
     selectedNomenclatures.value = [];
     currentPage.value = 1;
 }
+
+function resetForm() {
+    form.nomenclatureId = null;
+    form.quantity = 0;
+    form.unit = '';
+    form.compatibleUnit = '';
+    form.supplyDate = null;
+}
 </script>
 
 <template>
     <AppLayout title="Supplies">
-        <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
+        <NotificationToast 
+            :notifications="notifications"
+            @close="closeNotification"
+        />
+        
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Поставки

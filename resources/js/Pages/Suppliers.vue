@@ -1,6 +1,8 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive, watch } from 'vue';
+import NotificationToast from '@/Components/NotificationToast.vue';
+import useNotifications from '@/Composables/useNotifications';
 import axios from 'axios';
 import IMask from 'imask';
 
@@ -15,27 +17,24 @@ const form = reactive({
 
 let isEdit = ref(false);
 let isEditId = ref(0);
-let isOpenModal = ref(false);
-let messageResponse = ref('');
-let messageResponseColor = ref('');
+
+const { notifications, showNotification, closeNotification } = useNotifications();
+
 let isLoaded = ref(false);
 let isLoading = ref(false);
-
-function closemessageResponse() {
-    document.querySelector('.modalMessage').classList.remove('show');
-    setTimeout(() => {
-        isOpenModal.value = false;
-        messageResponse.value = '';
-        messageResponseColor.value = '';
-    }, 500);
-}
 
 const suppliers = reactive({});
 
 function getSuppliers() {
+    isLoading.value = true;
     axios.get('/get-suppliers').then((response) => {
         suppliers.value = response.data.suppliers;
         isLoaded.value = true;
+        isLoading.value = false;
+    }).catch(error => {
+        console.error('Ошибка при получении поставщиков:', error);
+        showNotification('Ошибка при получении поставщиков', 'mred', 'Ошибка');
+        isLoading.value = false;
     });
 }
 getSuppliers();
@@ -43,8 +42,11 @@ getSuppliers();
 function deleteSuppliers(ids) {
     if (confirm('Вы действительно хотите удалить запись?')) {
         axios.post('/delete-suppliers', { suppliers_id: ids }).then((response) => {
-            openModal(response.data.status, 'mgreen');
+            showNotification(response.data.status, 'mgreen', 'Успех');
             getSuppliers();
+        }).catch(error => {
+            console.error('Ошибка при удалении поставщика:', error);
+            showNotification('Ошибка при удалении поставщика', 'mred', 'Ошибка');
         });
     }
 }
@@ -67,17 +69,15 @@ function clearSuppliers() {
 }
 
 function openModal(message, color) {
-    messageResponse.value = message;
-    messageResponseColor.value = color;
-    isOpenModal.value = true;
-    setTimeout(() => {
-        document.querySelector('.modalMessage').classList.add('show');
-    }, 10);
-
-    setTimeout(closemessageResponse, 3000);
+    showNotification(message, color, color === 'mgreen' ? 'Успех' : 'Ошибка');
 }
 
 function responseSuppliers() {
+    if (!form.supplierName) {
+        showNotification('Введите имя поставщика', 'mred', 'Ошибка');
+        return;
+    }
+    
     axios.post('/add-suppliers', {
         csrf: csrf,
         supplierName: form.supplierName,
@@ -87,11 +87,14 @@ function responseSuppliers() {
     }).then((response) => {
         if (response.data.isOk) {
             clearSuppliers();
-            openModal(response.data.status, 'mgreen');
+            showNotification(response.data.status, 'mgreen', 'Успех');
             getSuppliers();
         } else {
-            openModal(response.data.status, 'mred');
+            showNotification(response.data.status, 'mred', 'Ошибка');
         }
+    }).catch(error => {
+        console.error('Ошибка при добавлении поставщика:', error);
+        showNotification('Ошибка при добавлении поставщика', 'mred', 'Ошибка');
     });
 }
 
@@ -106,10 +109,10 @@ function updateSuppliersToServ() {
     }).then((response) => {
         if (response.data.isOk) {
             clearSuppliers();
-            openModal(response.data.status, 'mgreen');
+            showNotification(response.data.status, 'mgreen', 'Успех');
             getSuppliers();
         } else {
-            openModal(response.data.status, 'mred');
+            showNotification(response.data.status, 'mred', 'Ошибка');
         }
     });
 }
@@ -147,7 +150,11 @@ function formatPhoneNumber(value) {
 
 <template>
     <AppLayout title="Suppliers">
-        <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
+        <NotificationToast 
+            :notifications="notifications"
+            @close="closeNotification"
+        />
+        
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Поставщики

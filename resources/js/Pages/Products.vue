@@ -5,6 +5,8 @@ import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
+import NotificationToast from '@/Components/NotificationToast.vue';
+import useNotifications from '@/Composables/useNotifications';
 
 let csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
 
@@ -16,30 +18,12 @@ const form = useForm({
 let isEdit = ref(false);
 let isEditId = ref(0);
 
-let isOpenModal = ref(false);
-let messageResponse = ref('');
-let messageResponseColor = ref('');
+const { notifications, showNotification, closeNotification } = useNotifications();
 
 let isLoaded = ref(false);
 
 function openModal(message, color) {
-    messageResponse.value = message;
-    messageResponseColor.value = color;
-    isOpenModal.value = true;
-    setTimeout(() => {
-        document.querySelector('.modalMessage').classList.add('show');
-    }, 10);
-
-    setTimeout(closemessageResponse, 3000);
-}
-
-function closemessageResponse() {
-    document.querySelector('.modalMessage').classList.remove('show');
-    setTimeout(() => {
-        isOpenModal.value = false;
-        messageResponse.value = '';
-        messageResponseColor.value = '';
-    }, 500);
+    showNotification(message, color, color === 'mgreen' ? 'Успех' : 'Ошибка');
 }
 
 const products = reactive({})
@@ -55,6 +39,7 @@ function getProducts(){
     })
     .catch(error => {
         console.error('Ошибка при получении продуктов:', error);
+        showNotification('Ошибка при получении продуктов', 'mred', 'Ошибка');
     });
 }
 getProducts();
@@ -62,16 +47,10 @@ getProducts();
 function updateTable(mes, isok){
     isEdit = false;
     isEditId = 0;
-    isOpenModal.value = true;
-    messageResponse.value = mes;
-    if (isok) {
-        messageResponseColor.value = 'mgreen';
-    } else {
-        messageResponseColor.value = 'mred';
-    }
+    
+    showNotification(mes, isok ? 'mgreen' : 'mred', isok ? 'Успех' : 'Ошибка');
     
     getProducts();
-    setTimeout(closemessageResponse, 2000);
 }
 
 function updateProducts(ids){
@@ -178,10 +157,15 @@ const editingProduct = ref(null);
 
 <template>
     <AppLayout title="Products">
+        <NotificationToast 
+            :notifications="notifications"
+            @close="closeNotification"
+        />
+        
         <div v-if="!isLoaded" class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 backdrop-blur-sm">
             <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 dark:border-blue-400"></div>
         </div>
-        <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
+        
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Продукты

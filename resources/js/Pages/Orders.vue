@@ -1,5 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import NotificationToast from '@/Components/NotificationToast.vue';
+import useNotifications from '@/Composables/useNotifications';
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 
@@ -9,6 +11,7 @@ const insufficientItems = ref([]);
 const orders = ref([]);
 const showOrderHistory = ref(localStorage.getItem('showOrderHistory') === 'true');
 const isLoading = ref(true);
+const { notifications, showNotification, closeNotification } = useNotifications();
 const isOpenModal = ref(false);
 const messageResponse = ref('');
 const messageResponseColor = ref('');
@@ -77,11 +80,11 @@ function changeOrderStatus(order, newStatus) {
     axios.post(`/api/orders/${order.id}/status`, { status: newStatus })
         .then(response => {
             order.status = response.data.status;
-            openModal('Статус заказа обновлен', 'mgreen');
+            showNotification('Статус заказа обновлен', 'mgreen', 'Успех');
         })
         .catch(error => {
             console.error('Ошибка при обновлении статуса заказа:', error);
-            openModal('Ошибка при обновлении статуса заказа', 'mred');
+            showNotification('Ошибка при обновлении статуса заказа', 'mred', 'Ошибка');
         });
 }
 
@@ -118,7 +121,7 @@ async function placeOrder() {
         cart.value = [];
         products.value.forEach(product => product.quantity = 0);
         insufficientItems.value = [];
-        openModal('Заказ успешно размещен', 'mgreen');
+        showNotification('Заказ успешно размещен', 'mgreen', 'Успех');
     } catch (error) {
         if (error.response && error.response.status === 400) {
             const insufficient = error.response.data.insufficient;
@@ -127,22 +130,15 @@ async function placeOrder() {
             insufficient.forEach(item => {
                 message += `${item.name}: требуется ${item.required}, доступно ${item.available}\n`;
             });
-            openModal(message, 'mred');
+            showNotification(message, 'mred', 'Ошибка');
         } else {
             console.error('Ошибка при размещении заказа:', error);
         }
     }
 }
 
-function openModal(message, color) {
-    messageResponse.value = message;
-    messageResponseColor.value = color;
-    isOpenModal.value = true;
-    setTimeout(() => {
-        document.querySelector('.modalMessage').classList.add('show');
-    }, 10);
-
-    setTimeout(closemessageResponse, 3000);
+function openModal(message, color, title = 'Уведомление') {
+    showNotification(message, color, title);
 }
 
 function closemessageResponse() {
@@ -256,6 +252,12 @@ const filteredOrders = computed(() => {
 <template>
     <AppLayout title="Заказы">
         <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
+        
+        <NotificationToast 
+            :notifications="notifications"
+            @close="closeNotification"
+        />
+        
         <div v-if="isLoading" class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 backdrop-blur-sm">
             <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 dark:border-blue-400"></div>
         </div>
@@ -277,15 +279,15 @@ const filteredOrders = computed(() => {
                                     <div class="space-y-2">
                                         <label class="flex items-center">
                                             <input type="checkbox" v-model="selectedStatuses" :value="0" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
-                                            <span class="ml-2 text-gray-700 dark:text-gray-300">Отменен</span>
+                                            <span class="ml-2 text-red-600 dark:text-red-400">Отменен</span>
                                         </label>
                                         <label class="flex items-center">
                                             <input type="checkbox" v-model="selectedStatuses" :value="1" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
-                                            <span class="ml-2 text-gray-700 dark:text-gray-300">В процессе</span>
+                                            <span class="ml-2 text-blue-600 dark:text-blue-400">В процессе</span>
                                         </label>
                                         <label class="flex items-center">
                                             <input type="checkbox" v-model="selectedStatuses" :value="2" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
-                                            <span class="ml-2 text-gray-700 dark:text-gray-300">Завершен</span>
+                                            <span class="ml-2 text-green-600 dark:text-green-400">Завершен</span>
                                         </label>
                                     </div>
                                 </div>
@@ -305,8 +307,10 @@ const filteredOrders = computed(() => {
                                                 <span class="font-semibold text-gray-800 dark:text-gray-200">Заказ #{{ order.id }}</span>
                                                 <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">{{ formatDate(order.created_at) }}</span>
                                             </div>
-                                            <span :class="{'text-green-500': order.status === 2, 'text-blue-500': order.status === 1, 'text-red-500': order.status === 0}">
-                                                {{ order.status === 2 ? 'Завершен' : order.status === 1 ? 'В процессе' : 'Отменен' }}
+                                            <span :style="{
+                                                color: order.status == 2 ? '#10B981' : order.status == 1 ? '#3B82F6' : '#DC2626'
+                                            }">
+                                                {{ order.status == 2 ? 'Завершен' : order.status == 1 ? 'В процессе' : 'Отменен' }}
                                             </span>
                                         </div>
                                         <div v-if="order.showDetails" class="mt-2">
@@ -392,5 +396,44 @@ const filteredOrders = computed(() => {
 
 .mred {
     background-color: rgba(104, 2, 10, 0.9);
+}
+
+.notifications-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 350px;
+}
+
+.notification-item {
+    padding: 15px;
+    border-radius: 5px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all 0.3s ease;
+}
+
+.notification-item.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification-item.mgreen {
+    background-color: #10B981;
+}
+
+.notification-item.mred {
+    background-color: #DC2626;
+}
+
+.notification-item.mblue {
+    background-color: #3B82F6;
 }
 </style>

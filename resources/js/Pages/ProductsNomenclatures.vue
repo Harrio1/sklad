@@ -1,6 +1,8 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive, onMounted, computed, watch } from 'vue';
+import NotificationToast from '@/Components/NotificationToast.vue';
+import useNotifications from '@/Composables/useNotifications';
 import axios from 'axios';
 
 const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -10,9 +12,7 @@ const form = reactive({
     nomenclatures: [{ id: null, quantity: 0, price: 0, unit: '' }]
 });
 
-const isOpenModal = ref(false);
-const messageResponse = ref('');
-const messageResponseColor = ref('');
+const { notifications, showNotification, closeNotification } = useNotifications();
 
 const products = ref([]);
 const productsNomenclatures = ref([]);
@@ -21,29 +21,7 @@ const availableNomenclatures = ref([]);
 const isLoadingNomenclatures = ref(false);
 
 function openModal(message, color) {
-    messageResponse.value = message;
-    messageResponseColor.value = color;
-    isOpenModal.value = true;
-    setTimeout(() => {
-        const modalElement = document.querySelector('.modalMessage');
-        if (modalElement) {
-            modalElement.classList.add('show');
-        }
-    }, 10);
-
-    setTimeout(closemessageResponse, 3000);
-}
-
-function closemessageResponse() {
-    const modalElement = document.querySelector('.modalMessage');
-    if (modalElement) {
-        modalElement.classList.remove('show');
-    }
-    setTimeout(() => {
-        isOpenModal.value = false;
-        messageResponse.value = '';
-        messageResponseColor.value = '';
-    }, 500);
+    showNotification(message, color, color === 'mgreen' ? 'Успех' : 'Ошибка');
 }
 
 function getProductsNomenclatures() {
@@ -52,7 +30,9 @@ function getProductsNomenclatures() {
             products.value = response.data.products || [];
             productsNomenclatures.value = response.data.products.filter(product => product.nomenclatures && product.nomenclatures.length > 0) || [];
             isLoading.value = false;
-        }).catch(() => {
+        }).catch((error) => {
+            console.error('Ошибка при получении данных:', error);
+            showNotification('Ошибка при получении данных', 'mred', 'Ошибка');
             products.value = [];
             productsNomenclatures.value = [];
             isLoading.value = false;
@@ -89,6 +69,11 @@ function deleteProductNomenclature(productId, nomenclatureId) {
 }
 
 function submitForm() {
+    if (!form.product_id || form.nomenclatures.some(n => !n.id || n.quantity <= 0)) {
+        openModal('Заполните все поля формы корректно', 'mred');
+        return;
+    }
+
     axios.post('/add-products-nomenclatures', form)
         .then((response) => {
             openModal(response.data.status, 'mgreen');
@@ -154,7 +139,11 @@ function getQuantityStep(unit) {
 
 <template>
     <AppLayout title="Продукты номенклатуры">
-        <div class="modalMessage" :class="messageResponseColor" v-if="isOpenModal">{{ messageResponse }}</div>
+        <NotificationToast 
+            :notifications="notifications"
+            @close="closeNotification"
+        />
+        
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Продукты номенклатуры

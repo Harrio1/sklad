@@ -13,12 +13,9 @@ defineProps({
     <Head title="Система управления складом" />
 
     <div class="relative min-h-screen bg-gradient-to-b from-gray-100 to-blue-50 dark:from-gray-900 dark:to-gray-800 selection:bg-blue-500 selection:text-white">
-        <!-- Верхняя "волна" -->
         <div class="absolute top-0 left-0 right-0 h-32 bg-blue-500 dark:bg-blue-700 rounded-b-[30%] opacity-20"></div>
         
-        <!-- Основной контент -->
         <div class="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 py-12">
-            <!-- Логотип и заголовок -->
             <div class="text-center mb-6 md:mb-10">
                 <div class="flex items-center justify-center mb-4">
                     <div class="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-400 dark:from-blue-700 dark:to-blue-500 rounded-xl shadow-lg">
@@ -33,7 +30,6 @@ defineProps({
                 </p>
             </div>
             
-            <!-- Блок авторизации - перемещен выше для мобильных устройств -->
             <div v-if="canLogin" class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full mb-8 md:order-last">
                 <div v-if="$page.props.auth.user" class="flex flex-col items-center">
                     <img :src="$page.props.auth.user.profile_photo_url" alt="Фото профиля" class="mb-4 rounded-full w-20 h-20 border-4 border-blue-100 dark:border-blue-900">
@@ -56,7 +52,6 @@ defineProps({
                 </template>
             </div>
             
-            <!-- Блоки с возможностями системы - показываются после блока авторизации на мобильных -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full md:mb-12">
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
                     <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4">
@@ -90,10 +85,8 @@ defineProps({
             </div>
         </div>
         
-        <!-- Нижняя "волна" -->
         <div class="absolute bottom-0 left-0 right-0 h-32 bg-blue-500 dark:bg-blue-700 rounded-t-[30%] opacity-20"></div>
         
-        <!-- Футер - добавлен отступ снизу для мобильных устройств -->
         <div class="absolute bottom-0 left-0 right-0 text-center p-4 pb-6 text-sm text-gray-600 dark:text-gray-400">
             <p>© {{ new Date().getFullYear() }} taknenado СУС. Все права защищены.</p>
         </div>

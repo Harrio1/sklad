@@ -2,6 +2,9 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue';
 import axios from 'axios';
+import ExcelJS from 'exceljs';
+import NotificationToast from '@/Components/NotificationToast.vue';
+import useNotifications from '@/Composables/useNotifications';
 
 const products = ref([]);
 const nomenclatures = ref([]);
@@ -21,6 +24,9 @@ const searchQuery = ref('');
 const isLoading = ref(false);
 const isMobile = ref(false);
 const mobileView = ref('products');
+
+const { notifications, showNotification, closeNotification } = useNotifications();
+const exportLoading = ref(false);
 
 function checkMobile() {
     isMobile.value = window.innerWidth < 768;
@@ -51,6 +57,7 @@ function loadProducts() {
         })
         .catch(error => {
             console.error('Ошибка при загрузке продуктов:', error);
+            showNotification('Ошибка при загрузке продуктов', 'mred', 'Ошибка');
             isLoading.value = false;
         });
 }
@@ -65,6 +72,7 @@ function loadNomenclatures(productId) {
         })
         .catch(error => {
             console.error('Ошибка при загрузке номенклатур:', error);
+            showNotification('Ошибка при загрузке номенклатур', 'mred', 'Ошибка');
             isLoading.value = false;
         });
 }
@@ -79,6 +87,7 @@ function loadOrders() {
         })
         .catch(error => {
             console.error('Ошибка при загрузке заказов:', error);
+            showNotification('Ошибка при загрузке заказов', 'mred', 'Ошибка');
             isLoading.value = false;
         });
 }
@@ -141,15 +150,18 @@ function updateTable() {
     tableData.value = nomenclatures.value.map(nomenclature => {
         const orderCountByDay = getOrderCountByDay(selectedProduct.value);
         
-        const totalOrderedQuantity = Object.values(orderCountByDay).reduce((sum, count) => sum + count, 0);
+        const totalOrderedQuantity = Object.values(orderCountByDay).reduce((sum, count) => sum + (Number(count) || 0), 0);
         
-        const totalConsumedQuantity = nomenclature.quantity * totalOrderedQuantity;
+        const quantity = Number(nomenclature.quantity) || 0;
+        const totalConsumedQuantity = quantity * totalOrderedQuantity;
         
         const dailyConsumedQuantity = {};
         for (const day in orderCountByDay) {
-            dailyConsumedQuantity[day] = orderCountByDay[day] * nomenclature.quantity;
+            const dayCount = Number(orderCountByDay[day]) || 0;
+            dailyConsumedQuantity[day] = dayCount * quantity;
         }
         
+        const price = Number(nomenclature.price) || 0;
         return {
             id: nomenclature.nomenclature.id,
             name: nomenclature.nomenclature.name,
@@ -157,9 +169,188 @@ function updateTable() {
             calculatedQuantity: totalConsumedQuantity,
             dailyData: dailyConsumedQuantity,
             dailyOrdersData: orderCountByDay,   
-            total: nomenclature.price * totalConsumedQuantity,
+            total: price * totalConsumedQuantity,
         };
     });
+}
+
+async function exportToExcel() {
+    if (tableData.value.length === 0) {
+        showNotification('Нет данных для экспорта', 'mred', 'Ошибка');
+        return;
+    }
+
+    exportLoading.value = true;
+    
+    try {
+        const productInfo = products.value.find(p => p.id === selectedProduct.value);
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Товарооборот');
+        
+        worksheet.mergeCells('A1:I1');
+        const titleCell = worksheet.getCell('A1');
+        titleCell.value = `${productInfo ? productInfo.name : 'Товарооборот'}`;
+        titleCell.font = { bold: true, size: 14 };
+        titleCell.alignment = { horizontal: 'center' };
+        
+        worksheet.mergeCells('A2:I2');
+        const dateCell = worksheet.getCell('A2');
+        dateCell.value = `Дата формирования: ${new Date().toLocaleDateString()}`;
+        dateCell.alignment = { horizontal: 'center' };
+        
+        let daysForExport;
+        if (activeTab.value === 'all') {
+            daysForExport = days.value;
+        } else {
+            daysForExport = days.value.filter(day => day.short === activeTab.value);
+        }
+        
+        const headers = ['Номенклатура', 'Ед. изм.'];
+        
+        daysForExport.forEach(day => {
+            headers.push(day.short);
+        });
+        
+        headers.push('Всего');
+        
+        worksheet.addRow([]); 
+        
+        let totalManufactured = 0;
+        const manufacturedData = [];
+        manufacturedData.push('Изготовлено'); 
+        manufacturedData.push(''); 
+        
+        daysForExport.forEach(day => {
+            const count = tableData.value && tableData.value[0] 
+                ? tableData.value[0].dailyOrdersData[day.short] || 0 
+                : 0;
+            
+            manufacturedData.push(count);
+            totalManufactured += count;
+        });
+        
+        manufacturedData.push(totalManufactured);
+        
+        const mRow = worksheet.addRow(manufacturedData);
+        mRow.font = { bold: true, size: 14 };
+        mRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFBCDFEF' } 
+        };
+        
+        mRow.eachCell((cell, colNumber) => {
+            if (colNumber > 2) { 
+                cell.alignment = { horizontal: 'right' };
+                if (cell.value > 0) {
+                    cell.font = { bold: true, size: 14, color: { argb: 'FF0070C0' } };
+                }
+            } else if (colNumber === 1) { 
+                cell.font = { bold: true, size: 14, color: { argb: 'FF000080' } };
+            }
+        });
+        
+        const headerRow = worksheet.addRow(headers);
+        
+        headerRow.font = { bold: true };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE0E0E0' }
+        };
+        
+        const columnWidths = [
+            { key: 'name', width: 30 },
+            { key: 'unit', width: 10 }
+        ];
+        
+        daysForExport.forEach(day => {
+            columnWidths.push({ 
+                key: day.short, 
+                width: 10
+            });
+        });
+        
+        columnWidths.push({ 
+            key: 'total', 
+            width: 15
+        });
+        
+        worksheet.columns = columnWidths;
+        
+        tableData.value.forEach(item => {
+            const rowData = {
+                name: item.name,
+                unit: item.unit,
+                total: (item.calculatedQuantity || 0).toFixed((item.calculatedQuantity || 0) % 1 === 0 ? 0 : 1)
+            };
+            
+            daysForExport.forEach(day => {
+                const value = item.dailyData[day.short] !== undefined ? Number(item.dailyData[day.short]) : 0;
+                rowData[day.short] = value.toFixed(value % 1 === 0 ? 0 : 1);
+            });
+            
+            worksheet.addRow(rowData);
+        });
+        
+
+        
+        daysForExport.forEach(day => {
+            const total = tableData.value.reduce((sum, item) => {
+                const value = item.dailyData[day.short];
+                return sum + (Number(value) || 0);
+            }, 0);
+        });
+        
+  
+        worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+            if (rowNumber > 4) {
+                row.eachCell((cell, colNumber) => {
+                    if (colNumber > 2) {
+                        cell.alignment = { horizontal: 'right' };
+                    }
+                });
+            }
+        });
+        
+        const borderStyle = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+        };
+        
+        worksheet.eachRow((row) => {
+            row.eachCell((cell) => {
+                cell.border = borderStyle;
+            });
+        });
+        
+        worksheet.lastRow.eachCell((cell) => {
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFE6F0D0' }
+            };
+        });
+        
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Товарооборот_${productInfo ? productInfo.name.replace(/\s+/g, '_') : 'Все_товары'}_${new Date().toLocaleDateString().replace(/\./g, '-')}.xlsx`;
+        link.click();
+        
+        window.URL.revokeObjectURL(url);
+        showNotification('Экспорт успешно выполнен', 'mgreen', 'Успех');
+    } catch (error) {
+        console.error('Ошибка при экспорте в Excel:', error);
+        showNotification('Ошибка при экспорте в Excel', 'mred', 'Ошибка');
+    } finally {
+        exportLoading.value = false;
+    }
 }
 
 const selectedProductInfo = computed(() => {
@@ -195,6 +386,11 @@ watch(orders, updateTable);
 
 <template>
     <AppLayout title="Товарооборот">
+        <NotificationToast 
+            :notifications="notifications"
+            @close="closeNotification"
+        />
+        
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Товарооборот
@@ -204,15 +400,15 @@ watch(orders, updateTable);
         <div class="py-4 sm:py-8">
             <div class="mb-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto overflow-y-hidden hide-scrollbar">
                 <div class="flex flex-nowrap -mb-px text-sm font-medium text-center min-w-full pb-1">
-                    <a @click="setActiveTab('all')" 
+                        <a @click="setActiveTab('all')" 
                        :class="{'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400': activeTab === 'all',
                               'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-400': activeTab !== 'all'}"
                        class="flex-1 p-3 sm:p-4 border-b-2 rounded-t-lg cursor-pointer whitespace-nowrap">
-                        Все дни
-                    </a>
-                    
-                    <a v-for="day in days" :key="day.short" 
-                       @click="setActiveTab(day.short)"
+                            Все дни
+                        </a>
+                        
+                        <a v-for="day in days" :key="day.short" 
+                           @click="setActiveTab(day.short)"
                        :class="{'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400': activeTab === day.short,
                               'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-400': activeTab !== day.short}"
                        class="flex-1 p-3 sm:p-4 border-b-2 rounded-t-lg cursor-pointer whitespace-nowrap">
@@ -304,46 +500,63 @@ watch(orders, updateTable);
                     </div>
                     
                     <div v-else class="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-lg">
-                        <div class="bg-blue-600 dark:bg-blue-700 text-center p-2 font-bold text-white">
-                            {{ selectedProductInfo?.name || 'Готовый продукт' }}
+                        <div class="bg-blue-600 dark:bg-blue-700 text-center p-2 font-bold text-white flex justify-between items-center">
+                            <span class="flex-1"></span>
+                            <span class="flex-1 text-center">{{ selectedProductInfo?.name || 'Готовый продукт' }}</span>
+                            <span class="flex-1 text-right">
+                                <button 
+                                    @click="exportToExcel" 
+                                    :disabled="exportLoading || tableData.length === 0"
+                                    class="inline-flex items-center py-1 px-2 text-sm border border-transparent rounded shadow-sm text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <svg v-if="exportLoading" class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m-9 3h14" />
+                                    </svg>
+                                    {{ exportLoading ? 'Экспорт...' : 'Excel' }}
+                                </button>
+                            </span>
                         </div>
 
                         <div class="overflow-x-auto overflow-y-hidden hide-scrollbar">
                             <div class="grid bg-blue-100 dark:bg-blue-900 min-w-[700px] pb-1" style="grid-template-columns: minmax(130px, 1.5fr) repeat(7, 1fr);">
 
-                                <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200"></div>
-                                <div v-for="(day, index) in filteredDays" :key="index" class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">
-                                    {{ tableData[0]?.dailyOrdersData[day] || 0 }}
-                                </div>
-                                <div class="p-2 text-center font-semibold bg-blue-700 dark:bg-blue-800 text-white border-l border-gray-300 dark:border-gray-700">
-                                    {{ Object.values(tableData[0]?.dailyOrdersData || {}).reduce((sum, val) => sum + val, 0) }}
-                                </div>
+                                <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200">Изготовлено</div>
+                            <div v-for="(day, index) in filteredDays" :key="index" class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">
+                                {{ tableData[0]?.dailyOrdersData[day] || 0 }}
                             </div>
+                                <div class="p-2 text-center font-semibold bg-blue-700 dark:bg-blue-800 text-white border-l border-gray-300 dark:border-gray-700">
+                                {{ tableData[0] ? Object.values(tableData[0].dailyOrdersData || {}).reduce((sum, val) => sum + (Number(val) || 0), 0) : 0 }}
+                            </div>
+                        </div>
 
                             <div class="grid bg-gray-100 dark:bg-gray-800 min-w-[700px]" style="grid-template-columns: minmax(130px, 1.5fr) repeat(7, 1fr);">
                                 <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 text-sm sm:text-base break-words">Номенклатура</div>
-                                <div v-for="day in filteredDays" :key="day" class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">
-                                    {{ day }}
-                                </div>
-                                <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">Всего</div>
+                            <div v-for="day in filteredDays" :key="day" class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">
+                                {{ day }}
                             </div>
+                            <div class="p-2 text-center font-semibold text-gray-800 dark:text-gray-200 border-l border-gray-300 dark:border-gray-700">Всего</div>
+                        </div>
 
                             <div v-if="tableData.length === 0" class="p-4 text-center text-gray-500 dark:text-gray-400 min-w-[700px]">
-                                Нет данных для отображения
-                            </div>
-                            <template v-else>
-                                <div v-for="(item, index) in tableData" :key="item.id" 
-                                     :class="{'bg-white dark:bg-gray-900': index % 2 === 0, 'bg-gray-50 dark:bg-gray-800': index % 2 !== 0}"
+                            Нет данных для отображения
+                        </div>
+                        <template v-else>
+                            <div v-for="(item, index) in tableData" :key="item.id" 
+                                 :class="{'bg-white dark:bg-gray-900': index % 2 === 0, 'bg-gray-50 dark:bg-gray-800': index % 2 !== 0}"
                                      class="grid border-t border-gray-300 dark:border-gray-700 min-w-[700px]" style="grid-template-columns: minmax(130px, 1.5fr) repeat(7, 1fr);">
-                                    <div class="p-2 truncate text-gray-700 dark:text-gray-300" :title="item.name">{{ item.name }}</div>
-                                    <div v-for="day in filteredDays" :key="day" class="p-2 text-center text-gray-700 dark:text-gray-300 border-l border-gray-300 dark:border-gray-700">
-                                        {{ item.dailyData[day].toFixed(item.dailyData[day] % 1 === 0 ? 0 : 1) }}
-                                    </div>
-                                    <div class="p-2 text-center text-gray-700 dark:text-gray-300 font-medium border-l border-gray-300 dark:border-gray-700">
-                                        {{ item.calculatedQuantity.toFixed(item.calculatedQuantity % 1 === 0 ? 0 : 1) }}
-                                    </div>
+                                <div class="p-2 truncate text-gray-700 dark:text-gray-300" :title="item.name">{{ item.name }}</div>
+                                <div v-for="day in filteredDays" :key="day" class="p-2 text-center text-gray-700 dark:text-gray-300 border-l border-gray-300 dark:border-gray-700">
+                                    {{ (item.dailyData[day] !== undefined ? Number(item.dailyData[day]) : 0).toFixed(Number(item.dailyData[day]) % 1 === 0 ? 0 : 1) }}
                                 </div>
-                            </template>
+                                <div class="p-2 text-center text-gray-700 dark:text-gray-300 font-medium border-l border-gray-300 dark:border-gray-700">
+                                    {{ (item.calculatedQuantity || 0).toFixed(item.calculatedQuantity % 1 === 0 ? 0 : 1) }}
+                                </div>
+                            </div>
+                        </template>
                         </div>
                     </div>
                 </div>

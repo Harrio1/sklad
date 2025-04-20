@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, provide } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
@@ -7,6 +7,8 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import NotificationToast from '@/Components/NotificationToast.vue';
+import useNotifications from '@/Composables/useNotifications';
 
 defineProps({
     title: String,
@@ -15,6 +17,12 @@ defineProps({
 const showingNavigationDropdown = ref(false);
 const theme = ref(localStorage.getItem('theme') || 'light');
 const isDarkMode = ref(theme.value === 'dark');
+
+// Инициализируем useNotifications как реактивный объект
+const notificationsService = useNotifications();
+
+// Предоставляем доступ к службе уведомлений во всем приложении
+provide('notifications', notificationsService);
 
 watch(theme, (newTheme) => {
     document.body.classList.toggle('dark', newTheme === 'dark');
@@ -43,6 +51,11 @@ const logout = () => {
 <template>
     <div :class="{ 'dark': isDarkMode }">
         <Head :title="title" />
+
+        <NotificationToast 
+            :notifications="Array.isArray(notificationsService.notifications) ? notificationsService.notifications : Array.isArray(notificationsService.notifications.value) ? notificationsService.notifications.value : []"
+            @close="notificationsService.closeNotification"
+        />
 
         <Banner />
 
