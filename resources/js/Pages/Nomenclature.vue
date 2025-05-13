@@ -50,25 +50,25 @@ watch(() => form.unit_of_measurement, (newValue) => {
 function getNomenclature() {
     axios.get('/get-nomenclature')
         .then((response) => {
-            nomenclature.value = response.data.nomenclatures;
-            isLoading.value = false;
+        nomenclature.value = response.data.nomenclatures;
+        isLoading.value = false;
         })
         .catch((error) => {
             showNotification('Ошибка при загрузке номенклатуры', 'mred', 'Ошибка');
             console.error(error);
-        });
+    });
 }
 
 function getSuppliers() {
     axios.get('/get-suppliers')
         .then((response) => {
-            suppliers.value = response.data.suppliers;
-            isLoading.value = false;
+        suppliers.value = response.data.suppliers;
+        isLoading.value = false;
         })
         .catch((error) => {
             showNotification('Ошибка при загрузке поставщиков', 'mred', 'Ошибка');
             console.error(error);
-        });
+    });
 }
 
 function getUnits() {
@@ -85,12 +85,12 @@ function getUnits() {
 function getTurnoverData() {
     axios.get('/get-turnover-data')
         .then((response) => {
-            turnoverData.value = response.data.turnover;
+        turnoverData.value = response.data.turnover;
         })
         .catch(error => {
-            console.error("Ошибка при получении данных оборотной ведомости:", error);
+        console.error("Ошибка при получении данных оборотной ведомости:", error);
             showNotification('Ошибка при загрузке оборотной ведомости', 'mred', 'Ошибка');
-        });
+});
 }
 
 // Функции для модальных окон и уведомлений
@@ -226,8 +226,8 @@ async function exportToExcel() {
 
     try {
         // Создаем новую книгу Excel
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Оборотная ведомость');
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Оборотная ведомость');
 
         // Формируем дату для заголовка
         const currentDate = new Date().toLocaleDateString();
@@ -269,7 +269,7 @@ async function exportToExcel() {
         };
         
         // Устанавливаем ширину колонок
-        worksheet.columns = [
+    worksheet.columns = [
             { key: 'name', width: 30 },
             { key: 'supplier', width: 20 },
             { key: 'unit', width: 10 },
@@ -277,12 +277,12 @@ async function exportToExcel() {
             { key: 'received', width: 15 },
             { key: 'current_balance', width: 20 },
             { key: 'total_price', width: 15 }
-        ];
+    ];
 
         // Добавляем данные оборотной ведомости
         let totalSum = 0;
 
-        turnoverData.value.forEach(item => {
+    turnoverData.value.forEach(item => {
             // Преобразуем строку в число для суммирования
             const price = typeof item.total_price === 'string' 
                 ? parseFloat(item.total_price.replace(/[^\d.-]/g, '')) 
@@ -290,16 +290,16 @@ async function exportToExcel() {
                 
             totalSum += price;
             
-            worksheet.addRow({
-                name: item.name,
-                supplier: item.supplier.name,
-                unit: item.unit_of_measurement,
-                start_balance: item.start_balance,
-                received: item.received,
-                current_balance: item.current_balance,
+        worksheet.addRow({
+            name: item.name,
+            supplier: item.supplier.name,
+            unit: item.unit_of_measurement,
+            start_balance: item.start_balance,
+            received: item.received,
+            current_balance: item.current_balance,
                 total_price: price.toFixed(2)
-            });
         });
+    });
 
         // Добавляем итоговую строку
         const totalRow = worksheet.addRow({
@@ -344,16 +344,16 @@ async function exportToExcel() {
                 cell.border = borderStyle;
             });
         });
-        
-        // Генерируем и скачиваем файл
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+    // Генерируем и скачиваем файл
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = window.URL.createObjectURL(blob);
         
-        const link = document.createElement('a');
+    const link = document.createElement('a');
         link.href = url;
         link.download = `Оборотная_ведомость_${currentDate.replace(/\./g, '-')}.xlsx`;
-        link.click();
+    link.click();
         
         window.URL.revokeObjectURL(url);
         showNotification('Экспорт успешно выполнен', 'mgreen', 'Успех');
@@ -429,12 +429,12 @@ onMounted(() => {
                                 <label for="unit_of_measurement" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Единица измерения</label>
                                 <div class="relative">
                                     <select id="unit_of_measurement" v-model="form.unit_of_measurement" @change="handleUnitChange" required
-                                            class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
+                                        class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
                                         <option value="create_new">Создать единицу измерения...</option>
-                                        <option v-for="unit in units" :key="unit" :value="unit">
-                                            {{ unit }}
-                                        </option>
-                                    </select>
+                                    <option v-for="unit in units" :key="unit" :value="unit">
+                                        {{ unit }}
+                                    </option>
+                                </select>
                                 </div>
                             </div>
 
@@ -554,7 +554,7 @@ onMounted(() => {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                     </svg>
                     {{ exportLoading ? 'Экспорт...' : 'Экспорт в Excel' }}
-                </button>
+                        </button>
                     </div>
                     <div class="hidden sm:block overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

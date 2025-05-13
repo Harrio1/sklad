@@ -38,7 +38,7 @@ const toggleTheme = () => {
 const switchToTeam = (team) => {
     router.put(route('current-team.update'), {
         team_id: team.id,
-    }, { 
+    }, {
         preserveState: false,
     });
 };
@@ -304,7 +304,7 @@ const logout = () => {
                                 active-class="text-blue-600 dark:text-blue-200 bg-blue-50 dark:bg-blue-900/30 font-medium">
                                 API Tokens
                             </ResponsiveNavLink>
-                            
+
                             <ResponsiveNavLink as="button" @click="toggleTheme" 
                                 class="text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
                                 <span v-if="isDarkMode" class="mr-2">☀️</span>

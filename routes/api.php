@@ -27,3 +27,12 @@ Route::get('/orders', [OrdersController::class, 'getOrders']);
 Route::put('/orders/{order}', [OrdersController::class, 'updateOrderStatus']);
 Route::post('/orders/{order}/status', [OrdersController::class, 'updateStatus']);
 Route::get('/products/{productId}/nomenclatures', [ProductsNomenclatureController::class, 'getNomenclaturesByProductId']);
+
+// Маршруты для дашборда
+Route::prefix('dashboard')->group(function () {
+    Route::get('/products', [\App\Http\Controllers\Api\DashboardController::class, 'products']);
+    Route::get('/suppliers', [\App\Http\Controllers\Api\DashboardController::class, 'suppliers']);
+    Route::get('/supplies', [\App\Http\Controllers\Api\DashboardController::class, 'supplies']);
+    Route::get('/nomenclature', [\App\Http\Controllers\Api\DashboardController::class, 'nomenclature']);
+    Route::get('/product-nomenclature', [\App\Http\Controllers\Api\DashboardController::class, 'productNomenclature']);
+});

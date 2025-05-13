@@ -41,7 +41,7 @@ getSuppliers();
 
 function deleteSuppliers(ids) {
     if (confirm('Вы действительно хотите удалить запись?')) {
-        axios.post('/delete-suppliers', { suppliers_id: ids }).then((response) => {
+        axios.post('/delete-suppliers', { supplier_id: ids }).then((response) => {
             showNotification(response.data.status, 'mgreen', 'Успех');
             getSuppliers();
         }).catch(error => {

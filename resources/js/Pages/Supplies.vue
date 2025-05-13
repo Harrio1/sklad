@@ -182,6 +182,10 @@ function calculateTotalPrice(quantity, nomenclatureId) {
 }
 
 function validateQuantity(form) {
+    if (form.quantity < 0) {
+        form.quantity = 0;
+    }
+    
     if (isWholeNumber(form.unit)) {
         form.quantity = Math.floor(form.quantity);
     } else {
@@ -321,6 +325,7 @@ function resetForm() {
                             </label>
                             <input type="number" id="quantity" v-model="form.quantity" 
                                    :step="form.step"
+                                   min="0"
                                    @input="validateQuantity(form)"
                                    required
                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" />
