@@ -3,35 +3,77 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
-// Для отслеживания открытой секции (одновременно открыта может быть только одна)
-const expanded = ref(null);
+// Данные статистики
 const stats = ref({
     products: { count: 0, recentItems: [] },
     suppliers: { count: 0, recentItems: [] },
     supplies: { count: 0, recentItems: [] },
     nomenclature: { count: 0, recentItems: [] },
-    productNomenclature: { count: 0, recentItems: [] }
+    productNomenclature: { count: 0, recentItems: [] },
+    orders: { count: 0, recentItems: [] }
 });
+
+// Состояние развернутого блока
+const expandedBlock = ref(null);
+
+// Информация о блоках
+const blockInfo = {
+    products: {
+        title: 'Продукты',
+        description: 'Товары, которые производятся из различных компонентов. Каждый продукт может состоять из нескольких номенклатурных позиций.',
+        icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+        color: 'blue',
+        link: '/products'
+    },
+    suppliers: {
+        title: 'Поставщики',
+        description: 'Компании и частные лица, которые поставляют компоненты для производства. Включает контактную информацию и историю поставок.',
+        icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+        color: 'green',
+        link: '/suppliers'
+    },
+    supplies: {
+        title: 'Поставки',
+        description: 'Партии номенклатуры, полученные от поставщиков. Включает информацию о количестве, дате поставки и поставщике.',
+        icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+        color: 'purple',
+        link: '/supplies'
+    },
+    nomenclature: {
+        title: 'Номенклатура',
+        description: 'Базовые компоненты, используемые в производстве продуктов. Включает единицы измерения и спецификации.',
+        icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+        color: 'amber',
+        link: '/nomenclature'
+    },
+    orders: {
+        title: 'Заказы',
+        description: 'Заказы на продукцию, полученные от клиентов. Включает информацию о продуктах, количестве и статусе заказа.',
+        icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
+        color: 'red',
+        link: '/orders'
+    }
+};
+
+// Индикатор загрузки и ошибки
 const isLoading = ref(true);
 const errors = ref([]);
 
-// Переключение открытого состояния секции
-function toggleExpand(section) {
-    expanded.value = expanded.value === section ? null : section;
-}
-
+// Загрузка данных при монтировании компонента
 onMounted(() => {
     Promise.all([
         getStats('products'),
         getStats('suppliers'),
         getStats('supplies'),
         getStats('nomenclature'),
-        getStats('product-nomenclature')
+        getStats('product-nomenclature'),
+        getStats('orders')
     ]).finally(() => {
         isLoading.value = false;
     });
 });
 
+// Функция для получения статистики с сервера
 function getStats(type) {
     return axios.get(`/api/dashboard/${type}`)
         .then(response => {
@@ -46,6 +88,15 @@ function getStats(type) {
             const key = type === 'product-nomenclature' ? 'productNomenclature' : type;
             stats.value[key] = { count: 0, recentItems: [] };
         });
+}
+
+// Функция для переключения состояния блока
+function toggleBlock(blockKey) {
+    if (expandedBlock.value === blockKey) {
+        expandedBlock.value = null;
+    } else {
+        expandedBlock.value = blockKey;
+    }
 }
 </script>
 
@@ -72,238 +123,232 @@ function getStats(type) {
                     </ul>
                 </div>
                 
-                <!-- Основное содержимое с блоками данных -->
-                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Блок Продукты -->
-                    <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden hover:shadow-2xl transition-shadow">
-                        <!-- Заголовок блока - при клике открывает/закрывает детали -->
-                        <div class="p-4 sm:p-6 cursor-pointer" @click="toggleExpand('products')">
-                            <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Продукты</h3>
-                                <div class="bg-blue-500 text-white text-sm font-semibold rounded-full px-3 py-1">
-                                    {{ stats.products.count }}
+                <!-- Основное содержимое -->
+                <div v-else class="space-y-6">
+                    <!-- Верхние метрики -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Метрика Продукты -->
+                        <div 
+                            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transform hover:scale-102 transition-all duration-200 cursor-pointer"
+                            :class="{'ring-2 ring-blue-500 dark:ring-blue-400': expandedBlock === 'products'}"
+                            @click="toggleBlock('products')"
+                        >
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700 dark:text-gray-300">Продукты</p>
+                                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ stats.products.count }}</p>
+                                </div>
+                                <div class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
+                                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
                                 </div>
                             </div>
-                            <div class="mt-2">
-                                <p class="text-gray-600 dark:text-gray-400 text-sm">Всего продуктов в системе</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Развернутые детали блока - показываются только если блок раскрыт -->
-                        <div v-if="expanded === 'products'" class="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900">
-                            <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Последние продукты:</h4>
-                            <ul v-if="stats.products.recentItems.length > 0" class="space-y-2">
-                                <li v-for="item in stats.products.recentItems" :key="item.id" class="text-sm">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-800 dark:text-gray-200">{{ item.name }}</span>
-                                        <span v-if="item.count" class="text-gray-600 dark:text-gray-400">{{ item.count }}</span>
-                                    </div>
-                                </li>
-                            </ul>
-                            <div v-else class="text-gray-500 dark:text-gray-400 text-sm italic text-center py-2">
-                                Нет данных
-                            </div>
-                            <div class="mt-3 text-right">
-                                <a href="/products" class="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                            <div v-if="expandedBlock === 'products'" class="mt-4 animate-fadeIn">
+                                <div v-if="stats.products.recentItems.length > 0" class="mb-3">
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Последние добавленные:</p>
+                                    <ul class="text-sm text-gray-700 dark:text-gray-300 space-y-2 pl-2">
+                                        <li v-for="item in stats.products.recentItems.slice(0, 3)" :key="item.id" class="flex items-center">
+                                            <span class="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full mr-2"></span>
+                                            <span class="font-medium">{{ item.name }}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <a href="/products" class="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline mt-1">
                                     Перейти к продуктам
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                     </svg>
                                 </a>
                             </div>
+                            <div v-else class="mt-4">
+                                <a href="/products" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">Перейти к продуктам →</a>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Блок Поставщики -->
-                    <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden hover:shadow-2xl transition-shadow">
-                        <!-- Заголовок блока -->
-                        <div class="p-4 sm:p-6 cursor-pointer" @click="toggleExpand('suppliers')">
-                            <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Поставщики</h3>
-                                <div class="bg-green-500 text-white text-sm font-semibold rounded-full px-3 py-1">
-                                    {{ stats.suppliers.count }}
+                        <!-- Метрика Поставщики -->
+                        <div 
+                            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transform hover:scale-102 transition-all duration-200 cursor-pointer"
+                            :class="{'ring-2 ring-green-500 dark:ring-green-400': expandedBlock === 'suppliers'}"
+                            @click="toggleBlock('suppliers')"
+                        >
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700 dark:text-gray-300">Поставщики</p>
+                                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ stats.suppliers.count }}</p>
+                                </div>
+                                <div class="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
+                                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
                                 </div>
                             </div>
-                            <div class="mt-2">
-                                <p class="text-gray-600 dark:text-gray-400 text-sm">Активных поставщиков</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Развернутые детали блока -->
-                        <div v-if="expanded === 'suppliers'" class="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900">
-                            <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Основные поставщики:</h4>
-                            <ul v-if="stats.suppliers.recentItems.length > 0" class="space-y-2">
-                                <li v-for="item in stats.suppliers.recentItems" :key="item.id" class="text-sm">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-800 dark:text-gray-200">{{ item.name }}</span>
-                                        <span v-if="item.phone" class="text-gray-600 dark:text-gray-400">{{ item.phone }}</span>
-                                    </div>
-                                </li>
-                            </ul>
-                            <div v-else class="text-gray-500 dark:text-gray-400 text-sm italic text-center py-2">
-                                Нет данных
-                            </div>
-                            <div class="mt-3 text-right">
-                                <a href="/suppliers" class="inline-flex items-center text-sm font-medium text-green-600 dark:text-green-400 hover:underline">
+                            <div v-if="expandedBlock === 'suppliers'" class="mt-4 animate-fadeIn">
+                                <div v-if="stats.suppliers.recentItems.length > 0" class="mb-3">
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Последние добавленные:</p>
+                                    <ul class="text-sm text-gray-700 dark:text-gray-300 space-y-2 pl-2">
+                                        <li v-for="item in stats.suppliers.recentItems.slice(0, 3)" :key="item.id" class="flex items-center">
+                                            <span class="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></span>
+                                            <span class="font-medium">{{ item.name }}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <a href="/suppliers" class="inline-flex items-center text-sm font-medium text-green-600 dark:text-green-400 hover:underline mt-1">
                                     Перейти к поставщикам
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                     </svg>
                                 </a>
                             </div>
+                            <div v-else class="mt-4">
+                                <a href="/suppliers" class="text-sm font-medium text-green-600 dark:text-green-400 hover:underline">Перейти к поставщикам →</a>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Блок Поставки -->
-                    <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden hover:shadow-2xl transition-shadow">
-                        <!-- Заголовок блока -->
-                        <div class="p-4 sm:p-6 cursor-pointer" @click="toggleExpand('supplies')">
-                            <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Поставки</h3>
-                                <div class="bg-purple-500 text-white text-sm font-semibold rounded-full px-3 py-1">
-                                    {{ stats.supplies.count }}
+                        <!-- Метрика Поставки -->
+                        <div 
+                            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transform hover:scale-102 transition-all duration-200 cursor-pointer"
+                            :class="{'ring-2 ring-purple-500 dark:ring-purple-400': expandedBlock === 'supplies'}"
+                            @click="toggleBlock('supplies')"
+                        >
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700 dark:text-gray-300">Поставки</p>
+                                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ stats.supplies.count }}</p>
+                                </div>
+                                <div class="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-full">
+                                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
                                 </div>
                             </div>
-                            <div class="mt-2">
-                                <p class="text-gray-600 dark:text-gray-400 text-sm">Всего поставок компонентов</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Развернутые детали блока -->
-                        <div v-if="expanded === 'supplies'" class="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900">
-                            <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Последние поставки:</h4>
-                            <ul v-if="stats.supplies.recentItems.length > 0" class="space-y-2">
-                                <li v-for="item in stats.supplies.recentItems" :key="item.id" class="text-sm">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-800 dark:text-gray-200">{{ item.nomenclature }}</span>
-                                        <div class="text-right">
-                                            <span v-if="item.quantity" class="text-gray-600 dark:text-gray-400">{{ item.quantity }}</span>
-                                            <span v-if="item.date" class="text-gray-500 dark:text-gray-500 text-xs ml-2">{{ item.date }}</span>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                            <div v-else class="text-gray-500 dark:text-gray-400 text-sm italic text-center py-2">
-                                Нет данных
-                            </div>
-                            <div class="mt-3 text-right">
-                                <a href="/supplies" class="inline-flex items-center text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline">
+                            <div v-if="expandedBlock === 'supplies'" class="mt-4 animate-fadeIn">
+                                <div v-if="stats.supplies.recentItems.length > 0" class="mb-3">
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Последние поставки:</p>
+                                    <ul class="text-sm text-gray-700 dark:text-gray-300 space-y-2 pl-2">
+                                        <li v-for="item in stats.supplies.recentItems.slice(0, 3)" :key="item.id" class="flex items-center">
+                                            <span class="w-2 h-2 bg-purple-500 dark:bg-purple-400 rounded-full mr-2"></span>
+                                            <span class="font-medium">{{ item.nomenclature }}</span>
+                                            <span class="ml-1">({{ item.quantity }})</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <a href="/supplies" class="inline-flex items-center text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline mt-1">
                                     Перейти к поставкам
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                     </svg>
                                 </a>
                             </div>
+                            <div v-else class="mt-4">
+                                <a href="/supplies" class="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline">Перейти к поставкам →</a>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Блок Номенклатура -->
-                    <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden hover:shadow-2xl transition-shadow">
-                        <!-- Заголовок блока -->
-                        <div class="p-4 sm:p-6 cursor-pointer" @click="toggleExpand('nomenclature')">
-                            <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Номенклатура</h3>
-                                <div class="bg-amber-500 text-white text-sm font-semibold rounded-full px-3 py-1">
-                                    {{ stats.nomenclature.count }}
+                        <!-- Метрика Номенклатура -->
+                        <div 
+                            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transform hover:scale-102 transition-all duration-200 cursor-pointer"
+                            :class="{'ring-2 ring-amber-500 dark:ring-amber-400': expandedBlock === 'nomenclature'}"
+                            @click="toggleBlock('nomenclature')"
+                        >
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700 dark:text-gray-300">Номенклатура</p>
+                                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ stats.nomenclature.count }}</p>
+                                </div>
+                                <div class="bg-amber-100 dark:bg-amber-900/30 p-3 rounded-full">
+                                    <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                 </div>
                             </div>
-                            <div class="mt-2">
-                                <p class="text-gray-600 dark:text-gray-400 text-sm">Компонентов в номенклатуре</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Развернутые детали блока -->
-                        <div v-if="expanded === 'nomenclature'" class="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900">
-                            <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Популярные компоненты:</h4>
-                            <ul v-if="stats.nomenclature.recentItems.length > 0" class="space-y-2">
-                                <li v-for="item in stats.nomenclature.recentItems" :key="item.id" class="text-sm">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-800 dark:text-gray-200">{{ item.name }}</span>
-                                        <span v-if="item.unit" class="text-gray-600 dark:text-gray-400">{{ item.unit }}</span>
-                                    </div>
-                                </li>
-                            </ul>
-                            <div v-else class="text-gray-500 dark:text-gray-400 text-sm italic text-center py-2">
-                                Нет данных
-                            </div>
-                            <div class="mt-3 text-right">
-                                <a href="/nomenclature" class="inline-flex items-center text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline">
+                            <div v-if="expandedBlock === 'nomenclature'" class="mt-4 animate-fadeIn">
+                                <div v-if="stats.nomenclature.recentItems.length > 0" class="mb-3">
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Последние добавленные:</p>
+                                    <ul class="text-sm text-gray-700 dark:text-gray-300 space-y-2 pl-2">
+                                        <li v-for="item in stats.nomenclature.recentItems.slice(0, 3)" :key="item.id" class="flex items-center">
+                                            <span class="w-2 h-2 bg-amber-500 dark:bg-amber-400 rounded-full mr-2"></span>
+                                            <span class="font-medium">{{ item.name }}</span>
+                                            <span class="ml-1 text-gray-500 dark:text-gray-400">({{ item.unit || 'Нет ед. изм.' }})</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <a href="/nomenclature" class="inline-flex items-center text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline mt-1">
                                     Перейти к номенклатуре
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                     </svg>
                                 </a>
+                            </div>
+                            <div v-else class="mt-4">
+                                <a href="/nomenclature" class="text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline">Перейти к номенклатуре →</a>
+                            </div>
+                        </div>
+
+                        <!-- Метрика Заказы -->
+                        <div 
+                            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transform hover:scale-102 transition-all duration-200 cursor-pointer"
+                            :class="{'ring-2 ring-red-500 dark:ring-red-400': expandedBlock === 'orders'}"
+                            @click="toggleBlock('orders')"
+                        >
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700 dark:text-gray-300">Заказы</p>
+                                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ stats.orders.count }}</p>
+                                </div>
+                                <div class="bg-red-100 dark:bg-red-900/30 p-3 rounded-full">
+                                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div v-if="expandedBlock === 'orders'" class="mt-4 animate-fadeIn">
+                                <div v-if="stats.orders.recentItems.length > 0" class="mb-3">
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Последние заказы:</p>
+                                    <ul class="text-sm text-gray-700 dark:text-gray-300 space-y-2 pl-2">
+                                        <li v-for="item in stats.orders.recentItems.slice(0, 3)" :key="item.id" class="flex items-center">
+                                            <span class="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full mr-2"></span>
+                                            <span class="font-medium">{{ item.name }}</span>
+                                            <span class="ml-1">({{ item.count || 0 }} шт.)</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <a href="/orders" class="inline-flex items-center text-sm font-medium text-red-600 dark:text-red-400 hover:underline mt-1">
+                                    Перейти к заказам
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                            <div v-else class="mt-4">
+                                <a href="/orders" class="text-sm font-medium text-red-600 dark:text-red-400 hover:underline">Перейти к заказам →</a>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Блок Номенклатура продукта -->
-                    <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden hover:shadow-2xl transition-shadow">
-                        <!-- Заголовок блока -->
-                        <div class="p-4 sm:p-6 cursor-pointer" @click="toggleExpand('productNomenclature')">
-                            <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Номенклатура продукта</h3>
-                                <div class="bg-indigo-500 text-white text-sm font-semibold rounded-full px-3 py-1">
-                                    {{ stats.productNomenclature.count }}
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <p class="text-gray-600 dark:text-gray-400 text-sm">Связей между продуктами и компонентами</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Развернутые детали блока -->
-                        <div v-if="expanded === 'productNomenclature'" class="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900">
-                            <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Компоненты продуктов:</h4>
-                            <ul v-if="stats.productNomenclature.recentItems.length > 0" class="space-y-2">
-                                <li v-for="item in stats.productNomenclature.recentItems" :key="item.id" class="text-sm">
-                                    <div>
-                                        <span class="text-gray-800 dark:text-gray-200">{{ item.product }}</span>
-                                        <div class="flex justify-between mt-0.5 ml-4">
-                                            <span class="text-gray-600 dark:text-gray-400">{{ item.nomenclature }}</span>
-                                            <span v-if="item.quantity" class="text-gray-500 dark:text-gray-500 text-xs">{{ item.quantity }}</span>
-                                        </div>
+                    <!-- Последние действия -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Последние действия</h3>
+                        <div class="space-y-4">
+                            <div v-for="(item, index) in stats.supplies.recentItems.slice(0, 5)" :key="index" 
+                                 class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
                                     </div>
-                                </li>
-                            </ul>
-                            <div v-else class="text-gray-500 dark:text-gray-400 text-sm italic text-center py-2">
-                                Нет данных
-                            </div>
-                            <div class="mt-3 text-right">
-                                <a href="/product-nomenclature" class="inline-flex items-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
-                                    Перейти к номенклатуре продукта
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Блок статистики и аналитики -->
-                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 shadow-xl rounded-lg overflow-hidden md:col-span-2 lg:col-span-3">
-                        <div class="p-6 text-white">
-                            <h3 class="text-xl font-bold mb-4">Сводная статистика</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                                <div class="bg-white/20 rounded-lg p-4">
-                                    <p class="text-sm opacity-80">Продукты</p>
-                                    <p class="text-2xl font-bold">{{ stats.products.count }}</p>
                                 </div>
-                                <div class="bg-white/20 rounded-lg p-4">
-                                    <p class="text-sm opacity-80">Поставщики</p>
-                                    <p class="text-2xl font-bold">{{ stats.suppliers.count }}</p>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        {{ item.nomenclature }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        Количество: {{ item.quantity }}
+                                    </p>
                                 </div>
-                                <div class="bg-white/20 rounded-lg p-4">
-                                    <p class="text-sm opacity-80">Поставки</p>
-                                    <p class="text-2xl font-bold">{{ stats.supplies.count }}</p>
-                                </div>
-                                <div class="bg-white/20 rounded-lg p-4">
-                                    <p class="text-sm opacity-80">Номенклатура</p>
-                                    <p class="text-2xl font-bold">{{ stats.nomenclature.count }}</p>
-                                </div>
-                                <div class="bg-white/20 rounded-lg p-4">
-                                    <p class="text-sm opacity-80">Ном. продукта</p>
-                                    <p class="text-2xl font-bold">{{ stats.productNomenclature.count }}</p>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ item.date }}
                                 </div>
                             </div>
                         </div>
@@ -315,18 +360,22 @@ function getStats(type) {
 </template>
 
 <style scoped>
-.transition-shadow {
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+.transition-transform {
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
 }
 
-.hover\:shadow-2xl:hover {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    transform: translateY(-3px);
+.hover\:scale-102:hover {
+    transform: scale(1.02);
 }
 
-@media (prefers-color-scheme: dark) {
-    .hover\:shadow-2xl:hover {
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
+@keyframes fadeIn {
+    0% { opacity: 0; max-height: 0; }
+    100% { opacity: 1; max-height: 500px; }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out forwards;
 }
 </style>

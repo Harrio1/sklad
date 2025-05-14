@@ -145,8 +145,8 @@ function addSupply() {
         if (error.response && error.response.data) {
             if (error.response.data.message) {
                 errorMessage = error.response.data.message;
-            }
-            
+}
+
             if (error.response.data.errors) {
                 const validationErrors = Object.values(error.response.data.errors).flat();
                 if (validationErrors.length > 0) {
@@ -248,19 +248,19 @@ function updateTable(status) {
 
 function deleteSupply(supplyId) {
     if (confirm('Вы действительно хотите удалить эту поставку?')) {
-        axios.delete(`/delete-supply/${supplyId}`)
-            .then(response => {
-                if (response.data.status === 'Поставка успешно удалена') {
+       axios.delete(`/delete-supply/${supplyId}`)
+           .then(response => {
+               if (response.data.status === 'Поставка успешно удалена') {
                     getSupplies();
-                    openModal('Поставка успешно удалена!', 'mgreen');
-                } else {
-                    openModal('Ошибка при удалении поставки.', 'mred');
-                }
-            })
-            .catch(error => {
-                console.error('Error deleting supply:', error);
-                openModal('Ошибка при удалении поставки.', 'mred');
-            });
+                   openModal('Поставка успешно удалена!', 'mgreen');
+               } else {
+                   openModal('Ошибка при удалении поставки.', 'mred');
+               }
+           })
+           .catch(error => {
+               console.error('Error deleting supply:', error);
+               openModal('Ошибка при удалении поставки.', 'mred');
+           });
     }
 }
 
@@ -283,7 +283,7 @@ function resetForm() {
     form.unit = '';
     form.compatibleUnit = '';
     form.supplyDate = null;
-}
+   }
 </script>
 
 <template>

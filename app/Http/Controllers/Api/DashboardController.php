@@ -9,6 +9,7 @@ use App\Models\Suppliers;
 use App\Models\Supplies;
 use App\Models\Nomenclatures;
 use App\Models\Products_Nomenclature;
+use App\Models\Orders;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -153,5 +154,35 @@ class DashboardController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Получение статистики по заказам
+     */
+    public function orders()
+    {
+        // Получаем общее количество заказов
+        $count = Orders::count();
+
+        // Получаем последние 6 заказов (можно изменить лимит)
+        $recentItems = Orders::orderBy('created_at', 'desc')
+            ->take(6)
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'name' => 'Заказ №' . $order->id,
+                    'count' => $order->items_count ?? 0, // если есть поле с количеством товаров
+                    'date' => $order->created_at ? $order->created_at->format('Y-m-d') : null,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'count' => $count,
+                'recentItems' => $recentItems,
+            ]
+        ]);
     }
 } 

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\OrdersController;
 use App\Http\Controllers\ProductsNomenclatureController;
+use App\Http\Controllers\Api\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,9 +31,10 @@ Route::get('/products/{productId}/nomenclatures', [ProductsNomenclatureControlle
 
 // Маршруты для дашборда
 Route::prefix('dashboard')->group(function () {
-    Route::get('/products', [\App\Http\Controllers\Api\DashboardController::class, 'products']);
-    Route::get('/suppliers', [\App\Http\Controllers\Api\DashboardController::class, 'suppliers']);
-    Route::get('/supplies', [\App\Http\Controllers\Api\DashboardController::class, 'supplies']);
-    Route::get('/nomenclature', [\App\Http\Controllers\Api\DashboardController::class, 'nomenclature']);
-    Route::get('/product-nomenclature', [\App\Http\Controllers\Api\DashboardController::class, 'productNomenclature']);
+    Route::get('/products', [DashboardController::class, 'products']);
+    Route::get('/suppliers', [DashboardController::class, 'suppliers']);
+    Route::get('/supplies', [DashboardController::class, 'supplies']);
+    Route::get('/nomenclature', [DashboardController::class, 'nomenclature']);
+    Route::get('/product-nomenclature', [DashboardController::class, 'productNomenclature']);
+    Route::get('/orders', [DashboardController::class, 'orders']);
 });
