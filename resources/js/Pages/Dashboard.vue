@@ -121,8 +121,8 @@ function toggleBlock(blockKey) {
                     <ul class="list-disc pl-5 text-red-700 dark:text-red-300 text-sm">
                         <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
                     </ul>
-                </div>
-                
+                    </div>
+
                 <!-- Основное содержимое -->
                 <div v-else class="space-y-6">
                     <!-- Верхние метрики -->
@@ -243,7 +243,7 @@ function toggleBlock(blockKey) {
                             <div v-else class="mt-4">
                                 <a href="/supplies" class="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline">Перейти к поставкам →</a>
                             </div>
-                        </div>
+                    </div>
 
                         <!-- Метрика Номенклатура -->
                         <div 
@@ -283,7 +283,7 @@ function toggleBlock(blockKey) {
                             <div v-else class="mt-4">
                                 <a href="/nomenclature" class="text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline">Перейти к номенклатуре →</a>
                             </div>
-                        </div>
+                    </div>
 
                         <!-- Метрика Заказы -->
                         <div 
@@ -367,8 +367,8 @@ function toggleBlock(blockKey) {
 }
 
 .hover\:scale-102:hover {
-    transform: scale(1.02);
-}
+        transform: scale(1.02);
+    }
 
 @keyframes fadeIn {
     0% { opacity: 0; max-height: 0; }

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, provide } from 'vue';
+import { ref, watch, provide, onMounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
@@ -15,8 +15,7 @@ defineProps({
 });
 
 const showingNavigationDropdown = ref(false);
-const theme = ref(localStorage.getItem('theme') || 'light');
-const isDarkMode = ref(theme.value === 'dark');
+const isDarkMode = ref(false);
 
 // Инициализируем useNotifications как реактивный объект
 const notificationsService = useNotifications();
@@ -24,16 +23,16 @@ const notificationsService = useNotifications();
 // Предоставляем доступ к службе уведомлений во всем приложении
 provide('notifications', notificationsService);
 
-watch(theme, (newTheme) => {
-    document.body.classList.toggle('dark', newTheme === 'dark');
-    localStorage.setItem('theme', newTheme);
+// Определяем текущую тему системы
+onMounted(() => {
+    // Проверяем, предпочитает ли система темную тему
+    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Слушаем изменения предпочтений темы
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        isDarkMode.value = event.matches;
+    });
 });
-
-const toggleTheme = () => {
-    theme.value = theme.value === 'light' ? 'dark' : 'light';
-    isDarkMode.value = !isDarkMode.value;
-    document.documentElement.classList.toggle('dark', isDarkMode.value);
-};
 
 const switchToTeam = (team) => {
     router.put(route('current-team.update'), {
@@ -49,7 +48,7 @@ const logout = () => {
 </script>
 
 <template>
-    <div :class="{ 'dark': isDarkMode }">
+    <div>
         <Head :title="title" />
 
         <NotificationToast 
@@ -187,9 +186,9 @@ const logout = () => {
                                                         API Tokens
                                                     </DropdownLink>
 
-                                                    <button @click="toggleTheme" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                                        {{ isDarkMode ? 'Светлая тема' : 'Темная тема' }}
-                                                    </button>
+                                                    <div class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                                                        {{ isDarkMode ? 'Темная тема' : 'Светлая тема' }} (авто)
+                                                    </div>
 
                                                     <form @submit.prevent="logout">
                                                         <DropdownLink as="button" class="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -204,7 +203,7 @@ const logout = () => {
                             </div>
 
                             <div class="-me-2 flex items-center sm:hidden">
-                                <button class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-gray-200 hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700 focus:text-white transition duration-150 ease-in-out" @click="showingNavigationDropdown = ! showingNavigationDropdown">
+                                <button class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-gray-500 hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700 focus:text-white transition duration-150 ease-in-out" @click="showingNavigationDropdown = ! showingNavigationDropdown">
                                     <svg
                                         class="h-6 w-6"
                                         stroke="currentColor"
@@ -305,12 +304,11 @@ const logout = () => {
                                 API Tokens
                             </ResponsiveNavLink>
 
-                            <ResponsiveNavLink as="button" @click="toggleTheme" 
-                                class="text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
+                            <div class="text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center px-4 py-2 text-sm">
                                 <span v-if="isDarkMode" class="mr-2">☀️</span>
                                 <span v-else class="mr-2">🌙</span>
-                                {{ isDarkMode ? 'Светлая тема' : 'Темная тема' }}
-                            </ResponsiveNavLink>
+                                {{ isDarkMode ? 'Темная тема' : 'Светлая тема' }} (авто)
+                            </div>
 
                             <form method="POST" @submit.prevent="logout" class="w-full">
                                 <ResponsiveNavLink as="button" 
