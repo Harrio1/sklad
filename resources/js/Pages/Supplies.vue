@@ -287,7 +287,7 @@ function resetForm() {
 </script>
 
 <template>
-    <AppLayout title="Supplies">
+    <AppLayout title="Поставки">
         <NotificationToast 
             :notifications="notifications"
             @close="closeNotification"

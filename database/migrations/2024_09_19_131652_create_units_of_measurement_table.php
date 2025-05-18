@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('name');
             $table->enum('type', ['integer', 'decimal'])->default('integer');
             $table->decimal('step', 8, 4)->default(1);
-            $table->decimal('min_value', 8, 4)->default(0);
             $table->timestamps();
         });
 
@@ -26,7 +25,6 @@ return new class extends Migration
                 'name' => 'шт.',
                 'type' => 'integer',
                 'step' => 1,
-                'min_value' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -34,7 +32,6 @@ return new class extends Migration
                 'name' => 'кг.',
                 'type' => 'decimal',
                 'step' => 0.01,
-                'min_value' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -42,7 +39,6 @@ return new class extends Migration
                 'name' => 'л.',
                 'type' => 'decimal',
                 'step' => 0.01,
-                'min_value' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

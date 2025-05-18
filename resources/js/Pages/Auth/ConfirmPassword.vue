@@ -26,7 +26,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Secure Area" />
+    <Head title="Подтверждение пароля" />
 
     <AuthenticationCard>
         <template #logo>

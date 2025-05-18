@@ -34,7 +34,6 @@ class UnitOfMeasurementController extends Controller
             'name' => 'required|string|max:255|unique:units_of_measurement',
             'type' => 'required|in:integer,decimal',
             'step' => 'required|numeric|min:0.0001',
-            'min_value' => 'required|numeric|min:0',
         ]);
 
         $unit = UnitOfMeasurement::create($validated);

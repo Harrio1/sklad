@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
+import { onMounted, ref } from 'vue';
 
 defineProps({
     canLogin: Boolean,
@@ -7,6 +8,29 @@ defineProps({
     laravelVersion: String,
     phpVersion: String,
 });
+
+const isDarkMode = ref(false);
+
+// Загружаем тему из localStorage при монтировании компонента
+onMounted(() => {
+    // Получаем сохраненную тему
+    const savedTheme = localStorage.getItem('darkMode');
+    
+    // Применяем тему, если она сохранена
+    if (savedTheme) {
+        isDarkMode.value = savedTheme === 'true';
+        applyTheme(isDarkMode.value);
+    }
+});
+
+// Функция для применения темы
+const applyTheme = (dark) => {
+    if (dark) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+};
 </script>
 
 <template>

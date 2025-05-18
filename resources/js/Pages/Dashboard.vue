@@ -101,7 +101,7 @@ function toggleBlock(blockKey) {
 </script>
 
 <template>
-    <AppLayout title="Dashboard">
+    <AppLayout title="Главная">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Главная страница

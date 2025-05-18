@@ -12,7 +12,7 @@ const props = defineProps({
     },
     contentClasses: {
         type: Array,
-        default: () => ['py-1', 'bg-white'],
+        default: () => ['py-1', 'bg-gray-50 dark:bg-gray-800'],
     },
 });
 
@@ -30,7 +30,8 @@ onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
 const widthClass = computed(() => {
     return {
         '48': 'w-48',
-    }[props.width.toString()];
+        '60': 'w-60',
+    }[props.width.toString()] || `w-${props.width}`;
 });
 
 const alignmentClasses = computed(() => {
@@ -40,6 +41,10 @@ const alignmentClasses = computed(() => {
 
     if (props.align === 'right') {
         return 'ltr:origin-top-right rtl:origin-top-left end-0';
+    }
+
+    if (props.align === 'center') {
+        return 'origin-top transform -translate-x-1/2 left-1/2';
     }
 
     return 'origin-top';
@@ -65,12 +70,12 @@ const alignmentClasses = computed(() => {
         >
             <div
                 v-show="open"
-                class="absolute z-50 mt-2 rounded-md shadow-lg"
+                class="absolute z-50 mt-2 rounded-md shadow-lg overflow-hidden"
                 :class="[widthClass, alignmentClasses]"
                 style="display: none;"
                 @click="open = false"
             >
-                <div class="rounded-md ring-1 ring-black ring-opacity-5" :class="contentClasses">
+                <div class="rounded-md" :class="contentClasses">
                     <slot name="content" />
                 </div>
             </div>

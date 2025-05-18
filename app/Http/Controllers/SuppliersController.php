@@ -37,7 +37,7 @@ class SuppliersController extends Controller
             return Response::json(['status' => 'Данные добавлены', 'isOk' => True], 200);
         } else {
             // Возвращаем ответ об ошибке, если номер телефона недействителен
-            return Response::json(['status' => 'Номер телефона недействителен.','isOk' => False], 200);
+            return Response::json(['status' => 'Номер телефона недействителен.','isOk' => False], 400);
         }
     }
 
@@ -51,13 +51,11 @@ class SuppliersController extends Controller
 
     // Метод для удаления поставщика по ID
     public function deleteById(Request $request){
-        // Поиск поставщика по ID, если не найден - возвращаем ошибку
-        $flight = Suppliers::findOr($request->suppliers_id, function () {
-              return Response::json(['status' => 'Ошибка, элемент не найден'], 200);
-        });
-        // Удаление поставщика
-        Suppliers::destroy($request->suppliers_id);
-        // Возвращаем успешный ответ
+        $supplier = Suppliers::find($request->supplier_id);
+        if (!$supplier) {
+            return Response::json(['status' => 'Ошибка, элемент не найден'], 404);
+        }
+        $supplier->delete();
         return Response::json(['status' => 'Поставщик успешно удален'], 200);
     }
 
@@ -65,7 +63,7 @@ class SuppliersController extends Controller
     public function updateById(Request $request){
         // Поиск поставщика по ID, если не найден - возвращаем ошибку
         $flight = Suppliers::findOr($request->supplierId, function () {
-            return Response::json(['status' => 'Ошибка, элемент не найден', 'isOk' => False], 200);
+            return Response::json(['status' => 'Ошибка, элемент не найден', 'isOk' => False], 404);
         });
         // Шаблон для проверки номера телефона (должен содержать 11 цифр)
         $pattern = '/^\d{11}$/';
@@ -82,7 +80,7 @@ class SuppliersController extends Controller
             return Response::json(['status' => 'Поставщик успешно изменен', 'isOk' => True], 200);
         } else {
             // Возвращаем ответ об ошибке, если номер телефона недействителен
-            return Response::json(['status' => 'Номер телефона недействителен.','isOk' => False], 200);
+            return Response::json(['status' => 'Номер телефона недействителен.','isOk' => False], 400);
         }
     }
 }

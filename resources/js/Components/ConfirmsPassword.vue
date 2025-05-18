@@ -11,15 +11,15 @@ const emit = defineEmits(['confirmed']);
 defineProps({
     title: {
         type: String,
-        default: 'Confirm Password',
+        default: 'Подтвердите пароль',
     },
     content: {
         type: String,
-        default: 'For your security, please confirm your password to continue.',
+        default: 'Для вашей безопасности, пожалуйста, подтвердите ваш пароль, чтобы продолжить.',
     },
     button: {
         type: String,
-        default: 'Confirm',
+        default: 'Подтвердить',
     },
 });
 
@@ -78,30 +78,32 @@ const closeModal = () => {
 
         <DialogModal :show="confirmingPassword" @close="closeModal">
             <template #title>
-                {{ title }}
+                <span class="text-gray-900 dark:text-gray-100">{{ title }}</span>
             </template>
 
             <template #content>
-                {{ content }}
+                <div class="text-gray-700 dark:text-gray-300">
+                    {{ content }}
 
-                <div class="mt-4">
-                    <TextInput
-                        ref="passwordInput"
-                        v-model="form.password"
-                        type="password"
-                        class="mt-1 block w-3/4"
-                        placeholder="Password"
-                        autocomplete="current-password"
-                        @keyup.enter="confirmPassword"
-                    />
+                    <div class="mt-4">
+                        <TextInput
+                            ref="passwordInput"
+                            v-model="form.password"
+                            type="password"
+                            class="mt-1 block w-3/4"
+                            placeholder="Пароль"
+                            autocomplete="current-password"
+                            @keyup.enter="confirmPassword"
+                        />
 
-                    <InputError :message="form.error" class="mt-2" />
+                        <InputError :message="form.error" class="mt-2" />
+                    </div>
                 </div>
             </template>
 
             <template #footer>
                 <SecondaryButton @click="closeModal">
-                    Cancel
+                    Отмена
                 </SecondaryButton>
 
                 <PrimaryButton

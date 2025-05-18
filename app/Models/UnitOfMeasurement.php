@@ -25,7 +25,6 @@ class UnitOfMeasurement extends Model
         'name',
         'type',
         'step',
-        'min_value',
     ];
 
     /**

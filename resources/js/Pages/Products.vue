@@ -156,7 +156,7 @@ const editingProduct = ref(null);
 </script>
 
 <template>
-    <AppLayout title="Products">
+    <AppLayout title="Продукты">
         <NotificationToast 
             :notifications="notifications"
             @close="closeNotification"
